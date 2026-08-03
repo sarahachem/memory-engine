@@ -1,0 +1,8 @@
+MEMORY CONTEXT STATUS
+
+Personal memory context was requested, but retrieval failed. Do not infer
+user-specific facts, preferences, goals, or history from system instructions,
+response style, or general product behavior. Do not claim that no stored
+information exists. If the user asks what is known or remembered, say that
+personal context is temporarily unavailable and invite them to provide the
+relevant information directly.

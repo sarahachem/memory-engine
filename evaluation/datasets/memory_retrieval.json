@@ -1,0 +1,390 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "SemanticCandidateRetriever",
+  "input_boundary": "candidate_memories are the full retrieval corpus for one synthetic user; this dataset does not evaluate planner behavior",
+  "description": "Curated retrieval cases using stable record IDs so retrieval quality can be measured independently of planner temporary indices.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "recall_at_k",
+      "precision_at_k",
+      "mean_reciprocal_rank",
+      "critical_memory_miss_rate",
+      "irrelevant_memory_inclusion_rate",
+      "inactive_memory_leakage_rate"
+    ],
+    "relevance_identity": "memory_id",
+    "default_status": "active",
+    "acceptance_gates": {
+      "recall_at_k": {"minimum": 0.9},
+      "mean_reciprocal_rank": {"minimum": 0.85},
+      "critical_memory_miss_rate": {"maximum": 0.0},
+      "inactive_memory_leakage_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "retrieve_exact_goal_001",
+      "description": "Direct lexical match retrieves an active goal.",
+      "tags": ["exact_match", "goal"],
+      "query": "I want to learn Japanese.",
+      "candidate_memories": [
+        {
+          "id": "japanese-goal",
+          "content": "The user wants to learn Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "id": "location-fact",
+          "content": "The user lives in Berlin.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        }
+      ],
+      "expected_relevant_ids": ["japanese-goal"],
+      "critical_relevant_ids": ["japanese-goal"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_dietary_contradiction_001",
+      "description": "Semantic paraphrase with weak lexical overlap.",
+      "tags": ["weak_lexical_overlap", "contradiction", "preference"],
+      "query": "I have gone back to eating meat.",
+      "candidate_memories": [
+        {
+          "id": "diet-memory",
+          "content": "The user follows a vegetarian diet.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "work-memory",
+          "content": "The user prefers working in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.91
+        }
+      ],
+      "expected_relevant_ids": ["diet-memory"],
+      "critical_relevant_ids": ["diet-memory"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_career_change_001",
+      "description": "A career change should retrieve the prior occupation despite limited shared vocabulary.",
+      "tags": ["weak_lexical_overlap", "contradiction", "personal_fact"],
+      "query": "I switched careers and now work as a product manager.",
+      "candidate_memories": [
+        {
+          "id": "occupation-memory",
+          "content": "The user is a software engineer.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        },
+        {
+          "id": "python-memory",
+          "content": "The user is learning Python.",
+          "memory_type": "goal",
+          "confidence": 0.92
+        }
+      ],
+      "expected_relevant_ids": ["occupation-memory"],
+      "critical_relevant_ids": ["occupation-memory"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_location_update_001",
+      "description": "Location correction retrieves the previous location fact.",
+      "tags": ["contradiction", "personal_fact"],
+      "query": "I now live in Berlin instead of Munich.",
+      "candidate_memories": [
+        {
+          "id": "munich-location",
+          "content": "The user lives in Munich.",
+          "memory_type": "personal_fact",
+          "confidence": 0.97
+        },
+        {
+          "id": "berlin-friend",
+          "content": "The user's friend Nora lives in Berlin.",
+          "memory_type": "relationship",
+          "confidence": 0.90
+        }
+      ],
+      "expected_relevant_ids": ["munich-location"],
+      "critical_relevant_ids": ["munich-location"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_correct_goal_among_many_001",
+      "description": "Select the abandoned goal from several active goals.",
+      "tags": ["multiple_candidates", "goal", "ranking"],
+      "query": "Running a marathon is no longer one of my goals.",
+      "candidate_memories": [
+        {
+          "id": "exercise-goal",
+          "content": "The user wants to exercise three times per week.",
+          "memory_type": "goal",
+          "confidence": 0.93
+        },
+        {
+          "id": "marathon-goal",
+          "content": "The user wants to run a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "id": "sleep-goal",
+          "content": "The user wants to improve their sleep routine.",
+          "memory_type": "goal",
+          "confidence": 0.91
+        }
+      ],
+      "expected_relevant_ids": ["marathon-goal"],
+      "critical_relevant_ids": ["marathon-goal"],
+      "limit": 2
+    },
+    {
+      "id": "retrieve_goal_context_001",
+      "description": "A scoped presentation goal retrieves the broader public-speaking goal.",
+      "tags": ["paraphrase", "goal"],
+      "query": "I specifically want to present confidently during work meetings.",
+      "candidate_memories": [
+        {
+          "id": "public-speaking-goal",
+          "content": "The user wants to become comfortable speaking in public.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        },
+        {
+          "id": "leadership-goal",
+          "content": "The user wants to become a better leader.",
+          "memory_type": "goal",
+          "confidence": 0.93
+        }
+      ],
+      "expected_relevant_ids": ["public-speaking-goal"],
+      "critical_relevant_ids": ["public-speaking-goal"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_relationship_context_001",
+      "description": "A named relationship query retrieves the correct relationship memory.",
+      "tags": ["relationship", "exact_entity"],
+      "query": "I need to prepare for a conversation with my sister Nora.",
+      "candidate_memories": [
+        {
+          "id": "nora-relationship",
+          "content": "The user's sister Nora gives them honest feedback.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "manager-relationship",
+          "content": "The user has weekly meetings with their manager.",
+          "memory_type": "relationship",
+          "confidence": 0.90
+        }
+      ],
+      "expected_relevant_ids": ["nora-relationship"],
+      "critical_relevant_ids": ["nora-relationship"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_multiple_relevant_001",
+      "description": "A combined message requires two distinct existing memories.",
+      "tags": ["multiple_relevant", "goal", "preference"],
+      "query": "I dropped my marathon goal and now prefer exercising in the evening.",
+      "candidate_memories": [
+        {
+          "id": "marathon-goal",
+          "content": "The user wants to run a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "id": "exercise-time",
+          "content": "The user prefers exercising in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.91
+        },
+        {
+          "id": "sleep-goal",
+          "content": "The user wants to improve their sleep.",
+          "memory_type": "goal",
+          "confidence": 0.90
+        }
+      ],
+      "expected_relevant_ids": ["marathon-goal", "exercise-time"],
+      "critical_relevant_ids": ["marathon-goal", "exercise-time"],
+      "limit": 5
+    },
+    {
+      "id": "exclude_deleted_memory_001",
+      "description": "Deleted records are never returned even when they are the strongest lexical match.",
+      "tags": ["status_filter", "deleted"],
+      "query": "I want to learn Japanese.",
+      "candidate_memories": [
+        {
+          "id": "deleted-japanese-goal",
+          "content": "The user wants to learn Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.97,
+          "status": "deleted"
+        },
+        {
+          "id": "active-language-goal",
+          "content": "The user wants to improve their Spanish.",
+          "memory_type": "goal",
+          "confidence": 0.91
+        }
+      ],
+      "expected_relevant_ids": [],
+      "critical_relevant_ids": [],
+      "limit": 5
+    },
+    {
+      "id": "exclude_unrelated_memories_001",
+      "description": "An unrelated corpus should produce no results.",
+      "tags": ["precision", "no_relevant_memory"],
+      "query": "I want help understanding attachment theory.",
+      "candidate_memories": [
+        {
+          "id": "location-memory",
+          "content": "The user lives in Berlin.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        },
+        {
+          "id": "exercise-memory",
+          "content": "The user prefers exercising in the evening.",
+          "memory_type": "preference",
+          "confidence": 0.91
+        }
+      ],
+      "expected_relevant_ids": [],
+      "critical_relevant_ids": [],
+      "limit": 5
+    },
+    {
+      "id": "respect_limit_001",
+      "description": "The result set must respect the requested top-k limit.",
+      "tags": ["limit", "ranking"],
+      "query": "Tell me about my learning goals.",
+      "candidate_memories": [
+        {
+          "id": "japanese-goal",
+          "content": "The user wants to learn Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "id": "python-goal",
+          "content": "The user wants to learn advanced Python.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "guitar-goal",
+          "content": "The user wants to learn guitar.",
+          "memory_type": "goal",
+          "confidence": 0.92
+        }
+      ],
+      "expected_relevant_ids": ["japanese-goal", "python-goal", "guitar-goal"],
+      "critical_relevant_ids": [],
+      "limit": 2
+    },
+    {
+      "id": "retrieve_recurring_pattern_001",
+      "description": "Reflection language retrieves an established conversation-avoidance pattern.",
+      "tags": ["recurring_pattern", "paraphrase"],
+      "query": "Why do I keep putting off hard conversations?",
+      "candidate_memories": [
+        {
+          "id": "avoidance-pattern",
+          "content": "The user often avoids difficult conversations because they worry about upsetting people.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "planning-preference",
+          "content": "The user prefers organizing their thoughts before discussions.",
+          "memory_type": "preference",
+          "confidence": 0.90
+        }
+      ],
+      "expected_relevant_ids": ["avoidance-pattern"],
+      "critical_relevant_ids": ["avoidance-pattern"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_value_for_decision_001",
+      "description": "A career decision query retrieves a directly relevant value.",
+      "tags": ["value", "decision_context"],
+      "query": "Would accepting this role give me enough freedom to work independently?",
+      "candidate_memories": [
+        {
+          "id": "autonomy-value",
+          "content": "The user values autonomy in their career.",
+          "memory_type": "value",
+          "confidence": 0.95
+        },
+        {
+          "id": "location-memory",
+          "content": "The user lives in Berlin.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        }
+      ],
+      "expected_relevant_ids": ["autonomy-value"],
+      "critical_relevant_ids": ["autonomy-value"],
+      "limit": 5
+    },
+    {
+      "id": "retrieve_same_type_distractors_001",
+      "description": "Entity-specific relevance should beat same-type distractors.",
+      "tags": ["ranking", "same_type_distractors", "preference"],
+      "query": "I changed how I want to receive feedback at work.",
+      "candidate_memories": [
+        {
+          "id": "feedback-preference",
+          "content": "The user prefers receiving work feedback in writing.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "exercise-preference",
+          "content": "The user prefers exercising in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.92
+        },
+        {
+          "id": "food-preference",
+          "content": "The user prefers vegetarian meals.",
+          "memory_type": "preference",
+          "confidence": 0.91
+        }
+      ],
+      "expected_relevant_ids": ["feedback-preference"],
+      "critical_relevant_ids": ["feedback-preference"],
+      "limit": 2
+    },
+    {
+      "id": "zero_limit_001",
+      "description": "A zero limit deterministically returns no records.",
+      "tags": ["limit", "boundary"],
+      "query": "I want to learn Japanese.",
+      "candidate_memories": [
+        {
+          "id": "japanese-goal",
+          "content": "The user wants to learn Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        }
+      ],
+      "expected_relevant_ids": [],
+      "critical_relevant_ids": [],
+      "limit": 0
+    }
+  ]
+}

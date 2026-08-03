@@ -1,0 +1,300 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryFactExtractor",
+  "description": "Unseen holdout cases for semantic memory-fact extraction. Do not use these cases for prompt tuning.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "fact_precision",
+      "fact_recall",
+      "fact_f1",
+      "compound_fact_recall",
+      "content_faithfulness_rate",
+      "kind_accuracy",
+      "memory_type_accuracy",
+      "evidence_selection_accuracy",
+      "evidence_grounding_rate",
+      "false_memory_rate",
+      "duplicate_fact_rate"
+    ],
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "fact_precision": {"minimum": 0.9},
+      "fact_recall": {"minimum": 0.9},
+      "compound_fact_recall": {"minimum": 0.9},
+      "evidence_grounding_rate": {"minimum": 1.0},
+      "false_memory_rate": {"maximum": 0.0},
+      "duplicate_fact_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "extract_holdout_unpunctuated_001",
+      "description": "Two assertions are found in an unpunctuated message.",
+      "tags": ["compound", "no_punctuation", "assertion", "critical"],
+      "user_message": "I live in Cologne and I prefer calls after lunch",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Cologne"],
+            "content_assertions": {
+              "must_include": ["live", "Cologne"],
+              "must_not_include": ["calls", "lunch"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer calls after lunch"],
+            "content_assertions": {
+              "must_include": ["prefer", "calls", "after lunch"],
+              "must_not_include": ["Cologne"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_semicolon_001",
+      "description": "A semicolon separates a decision and value.",
+      "tags": ["compound", "assertion", "multi_fact"],
+      "user_message": "I decided to remain at my current company; stability matters more to me now.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "decision",
+            "accepted_evidence": ["I decided to remain at my current company"],
+            "content_assertions": {
+              "must_include": ["decide", "remain", "current company"],
+              "must_not_include": ["stability"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": ["stability matters more to me now"],
+            "content_assertions": {
+              "must_include": ["stability", "matters"],
+              "must_not_include": ["company"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_tentative_valid_001",
+      "description": "Tentative goal is rejected while a committed goal is retained.",
+      "tags": ["compound", "tentative", "assertion"],
+      "user_message": "I might try pottery someday, although I am committed to completing my nursing degree.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I am committed to completing my nursing degree"],
+            "content_assertions": {
+              "must_include": ["complete", "nursing degree"],
+              "must_not_include": ["pottery"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_request_fact_001",
+      "description": "A question is ignored while its explicit durable context is retained.",
+      "tags": ["compound", "request", "assertion"],
+      "user_message": "How should I approach this conversation? My manager is called Daniel.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "relationship",
+            "accepted_evidence": ["My manager is called Daniel"],
+            "content_assertions": {
+              "must_include": ["manager", "Daniel"],
+              "must_not_include": ["conversation"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_pattern_goal_001",
+      "description": "A recurring pattern and independent goal remain atomic.",
+      "tags": ["compound", "recurring_pattern", "goal"],
+      "user_message": "I often abandon routines after three weeks, and I want to build a sustainable exercise habit.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["I often abandon routines after three weeks"],
+            "content_assertions": {
+              "must_include": ["often", "abandon", "routines", "three weeks"],
+              "must_not_include": ["exercise"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to build a sustainable exercise habit"],
+            "content_assertions": {
+              "must_include": ["sustainable", "exercise habit"],
+              "must_not_include": ["three weeks"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_relationship_preference_001",
+      "description": "Relationship and communication preference are independent.",
+      "tags": ["compound", "relationship", "preference"],
+      "user_message": "Leila is my business partner and I prefer discussing disagreements in person.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "relationship",
+            "accepted_evidence": ["Leila is my business partner"],
+            "content_assertions": {
+              "must_include": ["Leila", "business partner"],
+              "must_not_include": ["disagreements"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer discussing disagreements in person"],
+            "content_assertions": {
+              "must_include": ["prefer", "disagreements", "in person"],
+              "must_not_include": ["Leila"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_temporary_durable_001",
+      "description": "Temporary state is ignored while a durable decision is extracted.",
+      "tags": ["compound", "temporary", "decision"],
+      "user_message": "I am nervous today, but I have decided to relocate to Paris.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "decision",
+            "accepted_evidence": ["I have decided to relocate to Paris"],
+            "content_assertions": {
+              "must_include": ["decide", "relocate", "Paris"],
+              "must_not_include": ["nervous"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_invalidation_001",
+      "description": "An ended decision is represented as an invalidation.",
+      "tags": ["invalidation", "decision", "single"],
+      "user_message": "My decision to move to London no longer stands.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "decision",
+            "accepted_evidence": ["My decision to move to London no longer stands"],
+            "content_assertions": {
+              "must_include": ["decision", "move", "London", "no longer"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_invalidation_two_001",
+      "description": "One invalidation and two assertions are extracted separately.",
+      "tags": ["compound", "invalidation", "assertion", "multi_fact", "critical"],
+      "user_message": "I stopped pursuing law school, I now work in product design, and I prefer learning through projects.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "goal",
+            "accepted_evidence": ["I stopped pursuing law school"],
+            "content_assertions": {
+              "must_include": ["no longer", "law school"],
+              "must_include_any": [["stopped", "law school"]],
+              "must_not_include": ["product design", "projects"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I now work in product design"],
+            "content_assertions": {
+              "must_include": ["work", "product design"],
+              "must_not_include": ["law school", "projects"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer learning through projects"],
+            "content_assertions": {
+              "must_include": ["prefer", "learning", "projects"],
+              "must_not_include": ["law school", "product design"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_negative_001",
+      "description": "A generic educational question contains no personal memory.",
+      "tags": ["negative", "request", "false_memory"],
+      "user_message": "What is the difference between a habit and a routine?",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_replacement_001",
+      "description": "Current-location replacement yields invalidation and assertion facts.",
+      "tags": ["compound", "invalidation", "assertion", "replacement"],
+      "user_message": "I no longer live in Madrid; I live in Valencia now.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I no longer live in Madrid"],
+            "content_assertions": {
+              "must_include": ["no longer", "live", "Madrid"],
+              "must_not_include": ["Valencia"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Valencia now"],
+            "content_assertions": {
+              "must_include": ["live", "Valencia"],
+              "must_not_include": ["Madrid"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_single_event_001",
+      "description": "One procrastination event is not elevated into a pattern.",
+      "tags": ["negative", "single_event", "false_memory"],
+      "user_message": "I procrastinated on one report this morning.",
+      "expected": {"facts": []}
+    }
+  ]
+}

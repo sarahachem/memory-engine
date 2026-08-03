@@ -1,0 +1,345 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryPlanner",
+  "input_boundary": "active_memories are supplied directly; retrieval is not evaluated",
+  "description": "Unseen holdout cases for final planner evaluation. These cases must not be used for prompt tuning.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "correct_operation_set_rate",
+      "correct_target_index_rate",
+      "correct_create_memory_type_rate",
+      "content_faithfulness_rate",
+      "false_create_rate",
+      "false_delete_rate",
+      "false_update_rate",
+      "unsafe_mutation_rate",
+      "duplicate_create_rate",
+      "missed_delete_rate"
+    ],
+    "ignored_for_exact_comparison": [
+      "confidence",
+      "explanation"
+    ],
+    "operation_order_matters": false,
+    "metric_definitions": {
+      "false_delete_rate": "Among cases where no DELETE is expected, the fraction where the planner emits DELETE.",
+      "false_update_rate": "Among cases where no UPDATE is expected, the fraction where the planner emits UPDATE.",
+      "unsafe_mutation_rate": "Across all cases, the fraction containing an UPDATE or DELETE whose operation and target index do not match an expected mutation.",
+      "duplicate_create_rate": "Among cases tagged duplicate, the fraction where the planner emits CREATE for information already represented by an active memory."
+    }
+  },
+  "cases": [
+    {
+      "id": "holdout_unrelated_delete_001",
+      "description": "A negated goal must not delete an unrelated behavioral pattern.",
+      "tags": ["noop", "target_matching", "unrelated_memory"],
+      "user_message": "Learning to play piano is no longer one of my goals.",
+      "active_memories": [
+        {
+          "content": "The user tends to avoid asking for feedback after making mistakes.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.91
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "noop"
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_delete_create_001",
+      "description": "One goal is abandoned while a different goal is created.",
+      "tags": ["delete", "create", "multi_operation"],
+      "user_message": "I no longer want to run a triathlon. I have decided to learn Spanish this year.",
+      "active_memories": [
+        {
+          "content": "The user wants to complete a triathlon.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "delete",
+            "memory_index": 0
+          },
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["learn", "Spanish"],
+              "must_not_include": ["triathlon"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_delete_update_001",
+      "description": "Independent clauses require deletion and update of different memories.",
+      "tags": ["delete", "update", "atomicity", "multi_operation"],
+      "user_message": "I have dropped my plan to write a novel. I now prefer studying in the morning instead of at night.",
+      "active_memories": [
+        {
+          "content": "The user wants to write a novel.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "content": "The user prefers studying at night.",
+          "memory_type": "preference",
+          "confidence": 0.93
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "delete",
+            "memory_index": 0
+          },
+          {
+            "operation": "update",
+            "memory_index": 1,
+            "content_assertions": {
+              "must_include": ["studying", "morning"],
+              "must_not_include": ["studying at night", "novel"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_same_type_target_001",
+      "description": "Only the matching goal may be updated when multiple goals exist.",
+      "tags": ["update", "same_type", "target_matching"],
+      "user_message": "For my photography goal, I want to focus specifically on portrait photography.",
+      "active_memories": [
+        {
+          "content": "The user wants to improve at photography.",
+          "memory_type": "goal",
+          "confidence": 0.92
+        },
+        {
+          "content": "The user wants to learn conversational Italian.",
+          "memory_type": "goal",
+          "confidence": 0.90
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["photography", "portrait"],
+              "must_not_include": ["Italian"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_atomic_update_001",
+      "description": "Each mutation contains only the fact represented by its target memory.",
+      "tags": ["update", "create", "atomicity", "multi_operation"],
+      "user_message": "I now prefer remote work, and I have decided to start saving for a house.",
+      "active_memories": [
+        {
+          "content": "The user prefers working from an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["prefers", "remote work"],
+              "must_not_include": ["saving", "house"]
+            }
+          },
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["saving", "house"],
+              "must_not_include": ["remote work"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_request_not_goal_001",
+      "description": "A request for assistance is not evidence of a durable goal.",
+      "tags": ["noop", "request", "false_create"],
+      "user_message": "Can you help me prepare for tomorrow's presentation?",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "noop"
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_tentative_goal_001",
+      "description": "Tentative language does not establish a durable commitment.",
+      "tags": ["noop", "tentative", "false_create"],
+      "user_message": "Maybe one day I could try learning the guitar.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "noop"
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_single_event_001",
+      "description": "One isolated event does not establish a behavioral pattern.",
+      "tags": ["noop", "single_event", "false_pattern"],
+      "user_message": "I felt nervous during my meeting this morning.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "noop"
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_same_type_delete_001",
+      "description": "Only the abandoned goal may be deleted when two goals are active.",
+      "tags": [
+        "delete",
+        "same_type",
+        "target_matching",
+        "duplicate",
+        "duplicate_create"
+      ],
+      "user_message": "The marathon is off my list, but I am still committed to finishing my degree.",
+      "active_memories": [
+        {
+          "content": "The user wants to finish a university degree.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "content": "The user wants to run a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "delete",
+            "memory_index": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_unrelated_delete_create_001",
+      "description": "A missing abandoned goal is not deleted, while a new durable preference is created.",
+      "tags": ["create", "unrelated_memory", "multi_clause", "target_matching"],
+      "user_message": "I have given up on opening a bakery. I prefer receiving feedback face to face.",
+      "active_memories": [
+        {
+          "content": "The user wants to publish a collection of short stories.",
+          "memory_type": "goal",
+          "confidence": 0.89
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": ["feedback", "face to face"],
+              "must_not_include": ["bakery", "short stories"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_atomic_dual_create_001",
+      "description": "Two durable facts in one message require separate atomic creates.",
+      "tags": ["create", "atomicity", "multi_operation"],
+      "user_message": "Creativity is central to how I choose work, and I have decided to move to Lisbon next spring.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "value",
+            "content_assertions": {
+              "must_include": ["creativity", "work"],
+              "must_not_include": ["Lisbon"]
+            }
+          },
+          {
+            "operation": "create",
+            "memory_type": "decision",
+            "content_assertions": {
+              "must_include": ["move", "Lisbon", "next spring"],
+              "must_not_include": ["creativity"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_explicit_pattern_001",
+      "description": "Repeated behavior stated explicitly is sufficient for a recurring pattern.",
+      "tags": ["create", "recurring_pattern", "repetition"],
+      "user_message": "Whenever a deadline gets close, I repeatedly avoid checking my progress until the last minute.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "recurring_pattern",
+            "content_assertions": {
+              "must_include": ["deadline", "avoid", "progress", "last minute"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "holdout_duplicate_preference_001",
+      "description": "A paraphrase of an existing preference must not create a duplicate memory.",
+      "tags": ["noop", "duplicate", "duplicate_create"],
+      "user_message": "I prefer scheduling focused work during the morning.",
+      "active_memories": [
+        {
+          "content": "The user prefers doing focused work in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.93
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "noop"
+          }
+        ]
+      }
+    }
+  ]
+}

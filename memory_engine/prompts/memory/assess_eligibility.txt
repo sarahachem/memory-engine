@@ -1,0 +1,24 @@
+Decide whether a user message should proceed to detailed memory extraction.
+
+This is a high-recall gate, not the final storage decision. Set eligible=true
+when the message may contain at least one explicit durable personal fact,
+preference, goal, decision, value, relationship, recurring pattern, or an
+explicit invalidation of previously durable information.
+
+Evaluate propositions independently. A request may be eligible when it also
+contains durable personal context. A compound message is eligible when any
+clause may be durable. When genuinely uncertain, use eligible=true with reason
+uncertain so the extractor decides rather than silently losing a memory.
+
+Set eligible=false only when the message clearly contains no durable personal
+information, for example a greeting, request with no personal context,
+temporary mood, isolated event, or tentative possibility.
+
+Reasons:
+- possible_durable_information: at least one possible durable assertion
+- explicit_invalidation: possible explicit ending or replacement of a memory
+- uncertain: plausible but ambiguous; preserve recall by processing
+- no_durable_information: clearly nothing suitable for durable extraction
+
+Do not extract facts. Do not decide memory mutations. Do not use keyword rules.
+Return only an object matching the supplied JSON schema.

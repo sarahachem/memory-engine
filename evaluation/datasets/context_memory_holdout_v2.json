@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryReranker",
+  "description": "Untouched Qwen model-selection holdout created after the context-reranking prompt was frozen. Run once; do not tune against these cases.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "context_precision": {"minimum": 0.95},
+      "context_recall": {"minimum": 0.90},
+      "valid_none_accuracy": {"minimum": 0.95},
+      "inactive_memory_leakage_rate": {"maximum": 0.0},
+      "schema_valid_response_rate": {"minimum": 1.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "context_holdout_v2_compound_001", "description": "Select exactly the two facts addressed by a compound planning request.", "message": "Help me protect my quiet mornings while preparing for the Berlin half marathon.", "intent": "goal_planning", "limit": 3,
+      "candidates": [
+        {"id": "quiet-mornings", "content": "The user values having quiet mornings without meetings.", "memory_type": "value", "candidate_score": 0.66},
+        {"id": "berlin-race", "content": "The user plans to run the Berlin half marathon.", "memory_type": "goal", "candidate_score": 0.64},
+        {"id": "meal-prep", "content": "The user wants to prepare meals on Sundays.", "memory_type": "goal", "candidate_score": 0.41}
+      ], "expected_selected_ids": ["quiet-mornings", "berlin-race"]
+    },
+    {
+      "id": "context_holdout_v2_none_002", "description": "A stable factual lesson needs no unrelated personal context.", "message": "Explain why the seasons change.", "intent": "learning", "limit": 3,
+      "candidates": [
+        {"id": "travel", "content": "The user enjoys traveling in autumn.", "memory_type": "preference", "candidate_score": 0.49},
+        {"id": "weather", "content": "The user dislikes very hot weather.", "memory_type": "preference", "candidate_score": 0.46}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v2_value_003", "description": "Use an indirectly phrased value in a related role decision.", "message": "Would managing my own schedule make this offer a better fit?", "intent": "decision_support", "limit": 2,
+      "candidates": [
+        {"id": "flexibility", "content": "The user values control over when they work.", "memory_type": "value", "candidate_score": 0.61},
+        {"id": "commute", "content": "The user takes a train to their current office.", "memory_type": "personal_fact", "candidate_score": 0.45}
+      ], "expected_selected_ids": ["flexibility"]
+    },
+    {
+      "id": "context_holdout_v2_entity_004", "description": "Select only the requested fact about the named person.", "message": "What boundary did I set with Omar about weekend calls?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "omar-boundary", "content": "The user asked Omar not to call about work on weekends.", "memory_type": "decision", "candidate_score": 0.69},
+        {"id": "omar-role", "content": "Omar is the user's former manager.", "memory_type": "relationship", "candidate_score": 0.65}
+      ], "expected_selected_ids": ["omar-boundary"]
+    },
+    {
+      "id": "context_holdout_v2_multilingual_005", "description": "Match a German paraphrase to the exact stored preference.", "message": "Wie wollte ich schwieriges Feedback erhalten?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "feedback-private", "content": "The user prefers receiving difficult feedback privately.", "memory_type": "preference", "candidate_score": 0.63},
+        {"id": "feedback-writing", "content": "The user likes writing feedback for colleagues.", "memory_type": "preference", "candidate_score": 0.58}
+      ], "expected_selected_ids": ["feedback-private"]
+    },
+    {
+      "id": "context_holdout_v2_inactive_006", "description": "Never select a superseded exact goal or a merely related active fact.", "message": "Was moving to Vienna still my plan?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "old-vienna", "content": "The user plans to move to Vienna.", "memory_type": "goal", "status": "invalidated", "candidate_score": 0.91},
+        {"id": "visit-vienna", "content": "The user wants to visit Vienna for a weekend.", "memory_type": "goal", "candidate_score": 0.57}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v2_negation_007", "description": "A contradicted preference remains useful for understanding the contrast.", "message": "Why am I volunteering to lead when I usually avoid public attention?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "attention", "content": "The user prefers not to be the center of attention.", "memory_type": "preference", "candidate_score": 0.68},
+        {"id": "volunteering", "content": "The user volunteers at an animal shelter.", "memory_type": "personal_fact", "candidate_score": 0.54}
+      ], "expected_selected_ids": ["attention"]
+    },
+    {
+      "id": "context_holdout_v2_pattern_008", "description": "Select a causal recurring pattern, not generic preparation advice.", "message": "Why do I delay sending applications after I finish them?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "application-pattern", "content": "The user postpones submitting completed applications because they fear rejection.", "memory_type": "recurring_pattern", "candidate_score": 0.62},
+        {"id": "checklists", "content": "The user likes using checklists for complex tasks.", "memory_type": "preference", "candidate_score": 0.48}
+      ], "expected_selected_ids": ["application-pattern"]
+    },
+    {
+      "id": "context_holdout_v2_limit_009", "description": "Respect the limit by choosing the most directly requested current goal.", "message": "Remind me what certification I am studying for.", "intent": "reflection", "limit": 1,
+      "candidates": [
+        {"id": "cloud-cert", "content": "The user is studying for a cloud architecture certification.", "memory_type": "goal", "candidate_score": 0.72},
+        {"id": "python-course", "content": "The user wants to complete an advanced Python course.", "memory_type": "goal", "candidate_score": 0.66}
+      ], "expected_selected_ids": ["cloud-cert"]
+    },
+    {
+      "id": "context_holdout_v2_relationship_010", "description": "Reject a same-type relationship concerning another person.", "message": "How can I repair trust with my cousin Leila?", "intent": "goal_planning", "limit": 2,
+      "candidates": [
+        {"id": "leila", "content": "The user and their cousin Leila stopped speaking after an argument about money.", "memory_type": "relationship", "candidate_score": 0.67},
+        {"id": "sam", "content": "The user trusts their friend Sam with financial questions.", "memory_type": "relationship", "candidate_score": 0.55}
+      ], "expected_selected_ids": ["leila"]
+    },
+    {
+      "id": "context_holdout_v2_none_social_011", "description": "A farewell requires no personalized context.", "message": "All right, talk soon!", "intent": "general_conversation", "limit": 3,
+      "candidates": [
+        {"id": "communication", "content": "The user prefers phone calls to text messages.", "memory_type": "preference", "candidate_score": 0.43}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v2_exact_scope_012", "description": "Select a scoped health-adjacent exercise preference without unrelated goals.", "message": "What kind of movement did I say feels manageable after work?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "walking", "content": "The user finds a short walk manageable after work.", "memory_type": "preference", "candidate_score": 0.65},
+        {"id": "strength", "content": "The user wants to build upper-body strength.", "memory_type": "goal", "candidate_score": 0.57},
+        {"id": "sleep", "content": "The user wants to improve sleep quality.", "memory_type": "goal", "candidate_score": 0.50}
+      ], "expected_selected_ids": ["walking"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+MEMORY CONTEXT STATUS
+
+The current request asked for personal memory context, but no relevant active
+memory was available. Do not infer user-specific facts, preferences, goals, or
+history from system instructions, response style, general product behavior, or
+the absence of memory. If the user asks what is known or remembered, state
+explicitly that no relevant personal memory is available; do not replace this
+status with a vague phrase such as "I do not have enough information." Invite the
+user to provide or confirm the relevant context.

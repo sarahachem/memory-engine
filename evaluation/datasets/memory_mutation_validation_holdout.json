@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryMutationValidator",
+  "description": "Unseen, balanced holdout cases for final destructive-mutation validator verification. Do not use these cases for prompt tuning.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "decision_accuracy",
+      "unsafe_approval_rate",
+      "safe_approval_rate",
+      "safe_rejection_rate"
+    ]
+  },
+  "cases": [
+    {
+      "id": "validator_holdout_approve_delete_goal_001",
+      "description": "A paraphrased statement clearly abandons the exact stored cycling goal.",
+      "tags": ["delete", "safe", "paraphrase"],
+      "user_message": "Training for that long-distance bike race is something I have decided to give up.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to complete a long-distance cycling race.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_approve_delete_preference_001",
+      "description": "The user explicitly reverses the exact stored communication preference.",
+      "tags": ["delete", "safe", "paraphrase"],
+      "user_message": "Written feedback does not work for me anymore.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user prefers receiving feedback in writing.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_approve_delete_pattern_001",
+      "description": "The user explicitly says the stored recurring behavior has stopped.",
+      "tags": ["delete", "safe", "paraphrase"],
+      "user_message": "I no longer put off replying whenever a conversation feels uncomfortable.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user repeatedly delays responding to uncomfortable conversations.",
+        "memory_type": "recurring_pattern"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_approve_update_location_001",
+      "description": "A new city explicitly replaces the old current location.",
+      "tags": ["update", "safe", "replacement"],
+      "user_message": "I moved from Hamburg to Copenhagen and live there now.",
+      "operation": "update",
+      "proposed_content": "The user lives in Copenhagen.",
+      "target_memory": {
+        "content": "The user lives in Hamburg.",
+        "memory_type": "personal_fact"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_approve_update_preference_001",
+      "description": "A meeting-format preference receives a direct replacement.",
+      "tags": ["update", "safe", "replacement"],
+      "user_message": "I have switched to preferring video calls over phone calls.",
+      "operation": "update",
+      "proposed_content": "The user prefers video calls over phone calls.",
+      "target_memory": {
+        "content": "The user prefers phone calls over video calls.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_approve_update_goal_001",
+      "description": "The deadline of the same certification goal is explicitly replaced.",
+      "tags": ["update", "safe", "replacement"],
+      "user_message": "I still plan to earn the cloud certification, but my new deadline is December.",
+      "operation": "update",
+      "proposed_content": "The user wants to earn a cloud certification by December.",
+      "target_memory": {
+        "content": "The user wants to earn a cloud certification by September.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_holdout_reject_unrelated_delete_001",
+      "description": "Abandoning a travel goal must not delete an unrelated relationship memory.",
+      "tags": ["delete", "unsafe", "unrelated"],
+      "user_message": "I have scrapped my plan to visit Iceland.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user's brother Amir is a trusted source of career advice.",
+        "memory_type": "relationship"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_holdout_reject_same_type_delete_001",
+      "description": "Abandoning one learning goal must not delete a different learning goal.",
+      "tags": ["delete", "unsafe", "same_type", "wrong_target"],
+      "user_message": "I am done pursuing the data-science certificate.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to become fluent in French.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_holdout_reject_wrong_target_update_001",
+      "description": "A new exercise preference cannot replace an unrelated food preference.",
+      "tags": ["update", "unsafe", "wrong_target"],
+      "user_message": "I prefer swimming to running for exercise.",
+      "operation": "update",
+      "proposed_content": "The user prefers swimming to running for exercise.",
+      "target_memory": {
+        "content": "The user prefers savory breakfasts.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_holdout_reject_unsupported_update_001",
+      "description": "A correct replacement is unsafe when the proposal invents an additional occupation.",
+      "tags": ["update", "unsafe", "unsupported_content"],
+      "user_message": "My home is now in Vienna rather than Prague.",
+      "operation": "update",
+      "proposed_content": "The user lives in Vienna and works as an architect.",
+      "target_memory": {
+        "content": "The user lives in Prague.",
+        "memory_type": "personal_fact"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_holdout_reject_non_atomic_update_001",
+      "description": "An updated work preference must not absorb an independent relationship fact.",
+      "tags": ["update", "unsafe", "atomicity"],
+      "user_message": "I now prefer a quiet office, and my cousin Leila has become my business partner.",
+      "operation": "update",
+      "proposed_content": "The user prefers a quiet office and has a business partnership with their cousin Leila.",
+      "target_memory": {
+        "content": "The user prefers a lively open-plan office.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_holdout_reject_ambiguous_delete_001",
+      "description": "Exploratory doubt about a goal is not sufficient evidence for deletion.",
+      "tags": ["delete", "unsafe", "ambiguous"],
+      "user_message": "Lately I have been wondering whether publishing a cookbook is really for me.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to publish a cookbook.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    }
+  ]
+}

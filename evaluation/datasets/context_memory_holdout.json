@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryReranker",
+  "description": "Untouched final-context holdout created after the reranker development prompt was frozen. Run once; retire it if results guide changes.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "context_precision": {"minimum": 0.95},
+      "context_recall": {"minimum": 0.90},
+      "valid_none_accuracy": {"minimum": 0.95},
+      "inactive_memory_leakage_rate": {"maximum": 0.0},
+      "schema_valid_response_rate": {"minimum": 1.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "context_holdout_language_001", "description": "Select the exact language goal in a multilingual query.", "message": "Quiero retomar mi objetivo de aprender portugués.", "intent": "goal_planning", "limit": 2,
+      "candidates": [
+        {"id": "portuguese", "content": "The user wants to learn Portuguese.", "memory_type": "goal", "candidate_score": 0.72},
+        {"id": "italian", "content": "The user wants to improve their Italian.", "memory_type": "goal", "candidate_score": 0.69}
+      ], "expected_selected_ids": ["portuguese"]
+    },
+    {
+      "id": "context_holdout_person_relation_002", "description": "Same person but only one relationship fact answers the request.", "message": "What did Maya and I decide about the business?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "maya-business", "content": "The user and Maya decided to postpone starting a business.", "memory_type": "decision", "candidate_score": 0.63},
+        {"id": "maya-friend", "content": "Maya is the user's childhood friend.", "memory_type": "relationship", "candidate_score": 0.61}
+      ], "expected_selected_ids": ["maya-business"]
+    },
+    {
+      "id": "context_holdout_none_003", "description": "Topical memories are unnecessary for a general social exchange.", "message": "Thanks, that was helpful!", "intent": "general_conversation", "limit": 3,
+      "candidates": [
+        {"id": "thanks-pattern", "content": "The user values receiving detailed explanations.", "memory_type": "preference", "candidate_score": 0.44},
+        {"id": "learning", "content": "The user wants to learn Python.", "memory_type": "goal", "candidate_score": 0.31}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_inactive_004", "description": "An invalidated exact match must never enter context.", "message": "Am I still planning to relocate to Paris?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "old-paris", "content": "The user plans to relocate to Paris.", "memory_type": "goal", "status": "invalidated", "candidate_score": 0.88},
+        {"id": "travel", "content": "The user enjoys visiting France.", "memory_type": "preference", "candidate_score": 0.48}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_compound_005", "description": "Two independent memories are useful for a compound decision.", "message": "Would freelancing fit my need for autonomy and my preference for predictable income?", "intent": "decision_support", "limit": 3,
+      "candidates": [
+        {"id": "autonomy", "content": "The user values autonomy in their career.", "memory_type": "value", "candidate_score": 0.68},
+        {"id": "income", "content": "The user prefers predictable monthly income.", "memory_type": "preference", "candidate_score": 0.65},
+        {"id": "exercise", "content": "The user prefers exercising after work.", "memory_type": "preference", "candidate_score": 0.28}
+      ], "expected_selected_ids": ["autonomy", "income"]
+    },
+    {
+      "id": "context_holdout_negation_006", "description": "Retrieve the stored value contradicted by the current question.", "message": "Why am I considering office work when I usually prefer remote work?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "remote", "content": "The user prefers working remotely.", "memory_type": "preference", "candidate_score": 0.70},
+        {"id": "morning", "content": "The user prefers working in the morning.", "memory_type": "preference", "candidate_score": 0.51}
+      ], "expected_selected_ids": ["remote"]
+    },
+    {
+      "id": "context_holdout_family_007", "description": "Select the named family relationship, not another family member.", "message": "How should I approach the conflict with my brother Elias?", "intent": "decision_support", "limit": 2,
+      "candidates": [
+        {"id": "elias", "content": "Elias is the user's brother and they disagree about family responsibilities.", "memory_type": "relationship", "candidate_score": 0.64},
+        {"id": "nora", "content": "Nora is the user's sister and gives direct feedback.", "memory_type": "relationship", "candidate_score": 0.55}
+      ], "expected_selected_ids": ["elias"]
+    },
+    {
+      "id": "context_holdout_value_008", "description": "A stated value is relevant to a different but connected career choice.", "message": "Which offer better fits the kind of independent work I want?", "intent": "decision_support", "limit": 2,
+      "candidates": [
+        {"id": "independence", "content": "The user values independence in how they work.", "memory_type": "value", "candidate_score": 0.59},
+        {"id": "salary", "content": "The user previously earned a salary in euros.", "memory_type": "personal_fact", "candidate_score": 0.42}
+      ], "expected_selected_ids": ["independence"]
+    },
+    {
+      "id": "context_holdout_no_goal_match_009", "description": "Reject another goal that shares an action but not the target.", "message": "Help me restart writing my novel.", "intent": "goal_planning", "limit": 2,
+      "candidates": [
+        {"id": "novel", "content": "The user wants to finish writing a novel.", "memory_type": "goal", "candidate_score": 0.67},
+        {"id": "journal", "content": "The user wants to write in a journal each morning.", "memory_type": "goal", "candidate_score": 0.62}
+      ], "expected_selected_ids": ["novel"]
+    },
+    {
+      "id": "context_holdout_none_learning_010", "description": "Personal history is not useful for a general scientific explanation.", "message": "Explain how photosynthesis works.", "intent": "learning", "limit": 3,
+      "candidates": [
+        {"id": "garden", "content": "The user wants to grow herbs on their balcony.", "memory_type": "goal", "candidate_score": 0.53},
+        {"id": "biology", "content": "The user studied biology in school.", "memory_type": "personal_fact", "candidate_score": 0.46}
+      ], "expected_selected_ids": []
+    }
+  ]
+}

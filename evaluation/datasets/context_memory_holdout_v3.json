@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryReranker",
+  "description": "Untouched GPT-5.4 Mini model-selection holdout created after its perfect development run. Run once and never tune against it.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "context_precision": {"minimum": 0.95},
+      "context_recall": {"minimum": 0.90},
+      "valid_none_accuracy": {"minimum": 0.95},
+      "inactive_memory_leakage_rate": {"maximum": 0.0},
+      "schema_valid_response_rate": {"minimum": 1.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "context_holdout_v3_compound_001", "description": "Use two independent constraints and reject unrelated career background.", "message": "Compare the offer with my need for remote work and my commitment to collect my daughter from school.", "intent": "decision_support", "limit": 3,
+      "candidates": [
+        {"id": "remote", "content": "The user strongly prefers a remote-first job.", "memory_type": "preference", "candidate_score": 0.71},
+        {"id": "school", "content": "The user is responsible for collecting their daughter from school on weekdays.", "memory_type": "personal_fact", "candidate_score": 0.67},
+        {"id": "promotion", "content": "The user was promoted in their previous company.", "memory_type": "personal_fact", "candidate_score": 0.52}
+      ], "expected_selected_ids": ["remote", "school"]
+    },
+    {
+      "id": "context_holdout_v3_none_002", "description": "A general conceptual explanation has no need for adjacent personal facts.", "message": "What is the difference between empathy and sympathy?", "intent": "learning", "limit": 3,
+      "candidates": [
+        {"id": "friend", "content": "The user tries to listen carefully when friends are upset.", "memory_type": "value", "candidate_score": 0.55},
+        {"id": "psychology", "content": "The user enjoys reading psychology books.", "memory_type": "preference", "candidate_score": 0.51}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v3_spanish_003", "description": "Match a Spanish paraphrase to a scoped recurring pattern.", "message": "¿Por qué dejo de hablar cuando una conversación se vuelve tensa?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "shutdown", "content": "The user becomes quiet during tense conversations because they fear making conflict worse.", "memory_type": "recurring_pattern", "candidate_score": 0.65},
+        {"id": "presentation", "content": "The user becomes quiet before giving presentations.", "memory_type": "recurring_pattern", "candidate_score": 0.58}
+      ], "expected_selected_ids": ["shutdown"]
+    },
+    {
+      "id": "context_holdout_v3_person_004", "description": "Use the relevant event for the named person, not a general relationship label.", "message": "What agreement did Priya and I make about sharing rent?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "priya-rent", "content": "The user and Priya agreed to divide the rent equally.", "memory_type": "decision", "candidate_score": 0.69},
+        {"id": "priya-roommate", "content": "Priya is the user's roommate.", "memory_type": "relationship", "candidate_score": 0.66}
+      ], "expected_selected_ids": ["priya-rent"]
+    },
+    {
+      "id": "context_holdout_v3_inactive_005", "description": "An invalidated exact preference and an unrelated active preference both stay out.", "message": "Did I still want to avoid air travel?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "old-flight", "content": "The user prefers to avoid flying.", "memory_type": "preference", "status": "invalidated", "candidate_score": 0.89},
+        {"id": "train", "content": "The user enjoys overnight train travel.", "memory_type": "preference", "candidate_score": 0.56}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v3_none_social_006", "description": "A conversational acknowledgment selects nothing.", "message": "Got it, that clears things up.", "intent": "general_conversation", "limit": 3,
+      "candidates": [
+        {"id": "detail", "content": "The user appreciates detailed explanations.", "memory_type": "preference", "candidate_score": 0.47}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_holdout_v3_goal_007", "description": "Select the exact creative project and reject another project of the same type.", "message": "Help me get unstuck on the documentary I wanted to edit.", "intent": "goal_planning", "limit": 2,
+      "candidates": [
+        {"id": "documentary", "content": "The user wants to edit a short documentary about their neighborhood.", "memory_type": "goal", "candidate_score": 0.68},
+        {"id": "podcast", "content": "The user wants to produce a podcast about local history.", "memory_type": "goal", "candidate_score": 0.61}
+      ], "expected_selected_ids": ["documentary"]
+    },
+    {
+      "id": "context_holdout_v3_preference_008", "description": "Use the communication preference for the relevant work situation only.", "message": "How should I ask my new manager to give me instructions?", "intent": "goal_planning", "limit": 2,
+      "candidates": [
+        {"id": "instructions", "content": "The user prefers complex work instructions in writing.", "memory_type": "preference", "candidate_score": 0.64},
+        {"id": "social", "content": "The user prefers calling close friends rather than texting them.", "memory_type": "preference", "candidate_score": 0.50}
+      ], "expected_selected_ids": ["instructions"]
+    },
+    {
+      "id": "context_holdout_v3_limit_009", "description": "Choose only the requested value when the limit is one.", "message": "What mattered most to me about choosing a neighborhood?", "intent": "reflection", "limit": 1,
+      "candidates": [
+        {"id": "community", "content": "The user values a strong sense of community where they live.", "memory_type": "value", "candidate_score": 0.64},
+        {"id": "parks", "content": "The user likes walking in city parks.", "memory_type": "preference", "candidate_score": 0.59}
+      ], "expected_selected_ids": ["community"]
+    },
+    {
+      "id": "context_holdout_v3_contrast_010", "description": "Use a stored goal that explains a present conflict without selecting topical noise.", "message": "Why am I tempted to take overtime when I wanted more time for music?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "music-time", "content": "The user wants to reserve more weekly time for making music.", "memory_type": "goal", "candidate_score": 0.63},
+        {"id": "concerts", "content": "The user enjoys attending live concerts.", "memory_type": "preference", "candidate_score": 0.55}
+      ], "expected_selected_ids": ["music-time"]
+    }
+  ]
+}

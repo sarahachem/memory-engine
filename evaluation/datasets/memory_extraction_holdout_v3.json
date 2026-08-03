@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryFactExtractor",
+  "description": "Third unseen extraction holdout for the frozen hosted memory configuration. Run once and never tune against these cases.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "fact_precision",
+      "fact_recall",
+      "fact_f1",
+      "compound_fact_recall",
+      "content_faithfulness_rate",
+      "kind_accuracy",
+      "memory_type_accuracy",
+      "evidence_selection_accuracy",
+      "evidence_grounding_rate",
+      "raw_false_memory_rate",
+      "false_memory_rate",
+      "duplicate_fact_rate",
+      "low_confidence_fact_rate"
+    ],
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "fact_precision": {"minimum": 0.9},
+      "fact_recall": {"minimum": 0.9},
+      "compound_fact_recall": {"minimum": 0.9},
+      "evidence_grounding_rate": {"minimum": 1.0},
+      "false_memory_rate": {"maximum": 0.0},
+      "duplicate_fact_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "extract_holdout_v3_explicit_pattern_001",
+      "description": "A repeated response to deadline pressure supports a recurring pattern.",
+      "tags": ["recurrence", "recurring_pattern", "critical"],
+      "user_message": "Almost every time a deadline gets close, I avoid opening the project until the last evening.",
+      "expected": {"facts": [{
+        "kind": "assertion",
+        "memory_type": "recurring_pattern",
+        "accepted_evidence": ["Almost every time a deadline gets close, I avoid opening the project until the last evening"],
+        "content_assertions": {"must_include": ["deadline", "avoid", "project", "last evening"], "must_not_include": []}
+      }]}
+    },
+    {
+      "id": "extract_holdout_v3_single_event_001",
+      "description": "One forgotten appointment must not become a durable pattern.",
+      "tags": ["negative", "single_event", "false_memory", "critical"],
+      "user_message": "I forgot one dentist appointment yesterday.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_v3_temporary_instruction_001",
+      "description": "A response-format request limited to today is not a durable preference.",
+      "tags": ["negative", "temporary", "request", "false_memory"],
+      "user_message": "For today's workshop only, please keep your answers to one sentence.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_v3_unpunctuated_invalidation_relationship_001",
+      "description": "An ended goal and a relationship fact remain atomic without punctuation.",
+      "tags": ["compound", "no_punctuation", "invalidation", "relationship"],
+      "user_message": "I dropped my plan to become a mentor and Priya is my new team lead",
+      "expected": {"facts": [
+        {
+          "kind": "invalidation",
+          "memory_type": "goal",
+          "accepted_evidence": ["I dropped my plan to become a mentor"],
+          "content_assertions": {"must_include": ["mentor"], "must_include_any": [["dropped", "plan"], ["no longer", "mentor"]], "must_not_include": ["Priya"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "relationship",
+          "accepted_evidence": ["Priya is my new team lead"],
+          "content_assertions": {"must_include": ["Priya", "team lead"], "must_not_include": ["mentor"]}
+        }
+      ]}
+    },
+    {
+      "id": "extract_holdout_v3_tentative_and_decision_001",
+      "description": "A tentative possibility is ignored while a completed decision is retained.",
+      "tags": ["compound", "tentative", "decision"],
+      "user_message": "I might move abroad someday, but I have decided to enroll in the evening accounting course.",
+      "expected": {"facts": [{
+        "kind": "assertion",
+        "memory_type": "decision",
+        "accepted_evidence": ["I have decided to enroll in the evening accounting course"],
+        "content_assertions": {"must_include": ["decided", "enroll", "evening accounting course"], "must_not_include": ["move abroad"]}
+      }]}
+    },
+    {
+      "id": "extract_holdout_v3_atomic_relationships_001",
+      "description": "Family and business relationships with the same person remain separate atomic facts.",
+      "tags": ["compound", "relationship", "atomicity", "critical"],
+      "user_message": "Leila is my cousin, and Leila and I run the design studio together.",
+      "expected": {"facts": [
+        {
+          "kind": "assertion",
+          "memory_type": "relationship",
+          "accepted_evidence": ["Leila is my cousin"],
+          "content_assertions": {"must_include": ["Leila", "cousin"], "must_not_include": ["design studio"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "relationship",
+          "accepted_evidence": ["Leila and I run the design studio together"],
+          "content_assertions": {"must_include": ["Leila", "design studio", "together"], "must_not_include": ["cousin"]}
+        }
+      ]}
+    },
+    {
+      "id": "extract_holdout_v3_employer_replacement_001",
+      "description": "A current employer replacement yields an invalidation and a new assertion.",
+      "tags": ["compound", "replacement", "invalidation", "personal_fact"],
+      "user_message": "I no longer work at Atlas Labs; I work at Northstar Health now.",
+      "expected": {"facts": [
+        {
+          "kind": "invalidation",
+          "memory_type": "personal_fact",
+          "accepted_evidence": ["I no longer work at Atlas Labs"],
+          "content_assertions": {"must_include": ["no longer", "work", "Atlas Labs"], "must_not_include": ["Northstar Health"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "personal_fact",
+          "accepted_evidence": ["I work at Northstar Health now"],
+          "content_assertions": {"must_include": ["work", "Northstar Health"], "must_not_include": ["Atlas Labs"]}
+        }
+      ]}
+    },
+    {
+      "id": "extract_holdout_v3_generic_question_001",
+      "description": "A generic question about motivation contains no personal durable fact.",
+      "tags": ["negative", "question", "false_memory"],
+      "user_message": "Why do people sometimes lose motivation after making progress?",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_v3_request_and_value_001",
+      "description": "A help request is ignored while an explicit value is extracted.",
+      "tags": ["compound", "request", "value"],
+      "user_message": "Help me compare these offers. Having enough time for my children is one of my core career values.",
+      "expected": {"facts": [{
+        "kind": "assertion",
+        "memory_type": "value",
+        "accepted_evidence": ["Having enough time for my children is one of my core career values"],
+        "content_assertions": {"must_include": ["time", "children", "career", "value"], "must_not_include": ["compare", "offers"]}
+      }]}
+    },
+    {
+      "id": "extract_holdout_v3_three_atomic_facts_001",
+      "description": "A preference, goal, and value are extracted as three independent facts.",
+      "tags": ["compound", "preference", "goal", "value", "critical"],
+      "user_message": "I prefer planning on paper, I want to publish a collection of essays, and intellectual honesty matters deeply to me.",
+      "expected": {"facts": [
+        {
+          "kind": "assertion",
+          "memory_type": "preference",
+          "accepted_evidence": ["I prefer planning on paper"],
+          "content_assertions": {"must_include": ["prefer", "planning", "paper"], "must_not_include": ["essays", "honesty"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "goal",
+          "accepted_evidence": ["I want to publish a collection of essays"],
+          "content_assertions": {"must_include": ["publish", "collection", "essays"], "must_not_include": ["paper", "honesty"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "value",
+          "accepted_evidence": ["intellectual honesty matters deeply to me"],
+          "content_assertions": {"must_include": ["intellectual honesty"], "must_not_include": ["planning", "essays"]}
+        }
+      ]}
+    },
+    {
+      "id": "extract_holdout_v3_duplicate_paraphrase_001",
+      "description": "Repeated paraphrases of one preference collapse into one fact.",
+      "tags": ["duplicate", "preference", "critical"],
+      "user_message": "I prefer quiet mornings for focused work; doing focused work in quiet mornings is what I prefer.",
+      "expected": {"facts": [{
+        "kind": "assertion",
+        "memory_type": "preference",
+        "accepted_evidence": ["I prefer quiet mornings for focused work", "doing focused work in quiet mornings is what I prefer"],
+        "content_assertions": {"must_include": ["prefer", "quiet mornings", "focused work"], "must_not_include": []}
+      }]}
+    },
+    {
+      "id": "extract_holdout_v3_reversed_decision_new_goal_001",
+      "description": "A reversed decision and a new unrelated goal are both retained.",
+      "tags": ["compound", "invalidation", "decision", "goal"],
+      "user_message": "I reversed my decision to buy the cabin, and I now want to train as a mediator.",
+      "expected": {"facts": [
+        {
+          "kind": "invalidation",
+          "memory_type": "decision",
+          "accepted_evidence": ["I reversed my decision to buy the cabin"],
+          "content_assertions": {"must_include": ["reversed", "buy", "cabin"], "must_not_include": ["mediator"]}
+        },
+        {
+          "kind": "assertion",
+          "memory_type": "goal",
+          "accepted_evidence": ["I now want to train as a mediator"],
+          "content_assertions": {"must_include": ["train", "mediator"], "must_not_include": ["cabin"]}
+        }
+      ]}
+    }
+  ]
+}

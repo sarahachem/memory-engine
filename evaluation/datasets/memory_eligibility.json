@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryEligibilityGate",
+  "description": "Development cases for the high-recall pre-extraction memory eligibility boundary.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "eligible_recall": {"minimum": 1.0},
+      "ineligible_accuracy": {"minimum": 0.9},
+      "false_negative_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {"id": "eligible_preference", "message": "I prefer remote work.", "expected_eligible": true},
+    {"id": "eligible_goal", "message": "I want to become fluent in Japanese.", "expected_eligible": true},
+    {"id": "eligible_relationship", "message": "Nadia is my sister and we work together.", "expected_eligible": true},
+    {"id": "eligible_invalidation", "message": "Public speaking is no longer my goal.", "expected_eligible": true},
+    {"id": "eligible_pattern", "message": "I repeatedly avoid checking my progress until a deadline is close.", "expected_eligible": true},
+    {"id": "eligible_request_plus_fact", "message": "Help me prepare for my meeting; I work in healthcare.", "expected_eligible": true},
+    {"id": "eligible_compound_mixed", "message": "I skipped one workout yesterday, but I prefer weekly check-ins.", "expected_eligible": true},
+    {"id": "eligible_german", "message": "Ich bevorzuge es, morgens konzentriert zu arbeiten.", "expected_eligible": true},
+    {"id": "eligible_french", "message": "Je ne veux plus déménager à Paris.", "expected_eligible": true},
+    {"id": "ineligible_greeting", "message": "Hello, how are you?", "expected_eligible": false},
+    {"id": "ineligible_request", "message": "Can you explain attachment theory?", "expected_eligible": false},
+    {"id": "ineligible_temporary", "message": "I feel tired today.", "expected_eligible": false},
+    {"id": "ineligible_single_event", "message": "I skipped one workout yesterday.", "expected_eligible": false},
+    {"id": "ineligible_tentative", "message": "Maybe I should learn guitar someday.", "expected_eligible": false},
+    {"id": "ineligible_weather", "message": "What is the weather in Berlin today?", "expected_eligible": false},
+    {"id": "ineligible_task", "message": "Draft a polite reply to this email.", "expected_eligible": false}
+  ]
+}

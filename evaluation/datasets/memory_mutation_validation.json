@@ -1,0 +1,200 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryMutationValidator",
+  "description": "Safety-boundary cases for destructive memory mutations. Precision is prioritized: uncertain or unrelated mutations must be rejected.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "decision_accuracy",
+      "unsafe_approval_rate",
+      "safe_approval_rate",
+      "safe_rejection_rate"
+    ],
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "decision_accuracy": {"minimum": 1.0},
+      "unsafe_approval_rate": {"maximum": 0.0},
+      "safe_approval_rate": {"minimum": 1.0},
+      "safe_rejection_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "validator_reject_unrelated_delete_001",
+      "description": "An abandoned piano goal does not invalidate an avoidance pattern.",
+      "tags": ["delete", "unsafe", "unrelated"],
+      "user_message": "Learning piano is no longer one of my goals.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user tends to avoid asking for feedback after mistakes.",
+        "memory_type": "recurring_pattern"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_same_type_delete_001",
+      "description": "Abandoning one goal must not delete another goal.",
+      "tags": ["delete", "unsafe", "same_type"],
+      "user_message": "I no longer want to run a marathon.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to finish a university degree.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_uncertain_delete_001",
+      "description": "Tentative doubt is not explicit invalidation.",
+      "tags": ["delete", "unsafe", "uncertain"],
+      "user_message": "I am not sure whether learning Japanese still makes sense.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to learn Japanese.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_unrelated_delete_002",
+      "description": "A dietary change must not delete an unrelated work preference.",
+      "tags": ["delete", "unsafe", "unrelated"],
+      "user_message": "I have gone back to eating meat.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user prefers working in the morning.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_approve_explicit_delete_001",
+      "description": "The user explicitly abandons the exact stored goal.",
+      "tags": ["delete", "safe", "explicit"],
+      "user_message": "Public speaking is no longer one of my goals.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user wants to become comfortable speaking in public.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_approve_explicit_delete_002",
+      "description": "The exact stored dietary preference is explicitly invalidated.",
+      "tags": ["delete", "safe", "explicit"],
+      "user_message": "I have stopped being vegetarian and eat meat again.",
+      "operation": "delete",
+      "target_memory": {
+        "content": "The user follows a vegetarian diet.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_reject_unrelated_update_001",
+      "description": "A language goal cannot replace an unrelated photography goal.",
+      "tags": ["update", "unsafe", "unrelated"],
+      "user_message": "I want to focus on conversational Italian.",
+      "operation": "update",
+      "proposed_content": "The user wants to learn conversational Italian.",
+      "target_memory": {
+        "content": "The user wants to improve at photography.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_non_atomic_update_001",
+      "description": "An update must not mix an independent saving goal into a work preference.",
+      "tags": ["update", "unsafe", "atomicity"],
+      "user_message": "I prefer remote work, and I have decided to save for a house.",
+      "operation": "update",
+      "proposed_content": "The user prefers remote work and wants to save for a house.",
+      "target_memory": {
+        "content": "The user prefers working from an office.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_unsupported_update_001",
+      "description": "The proposed replacement contains a fact absent from the user message.",
+      "tags": ["update", "unsafe", "unsupported_content"],
+      "user_message": "I now live in Berlin.",
+      "operation": "update",
+      "proposed_content": "The user lives in Berlin and works as a designer.",
+      "target_memory": {
+        "content": "The user lives in Munich.",
+        "memory_type": "personal_fact"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_approve_replacement_update_001",
+      "description": "A current location is explicitly replaced.",
+      "tags": ["update", "safe", "replacement"],
+      "user_message": "I now live in Berlin instead of Munich.",
+      "operation": "update",
+      "proposed_content": "The user lives in Berlin.",
+      "target_memory": {
+        "content": "The user lives in Munich.",
+        "memory_type": "personal_fact"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_approve_scope_update_001",
+      "description": "The user explicitly narrows an existing photography goal.",
+      "tags": ["update", "safe", "clarification"],
+      "user_message": "For photography, I want to focus specifically on portraits.",
+      "operation": "update",
+      "proposed_content": "The user wants to improve at photography with a focus on portraits.",
+      "target_memory": {
+        "content": "The user wants to improve at photography.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": true}
+    },
+    {
+      "id": "validator_approve_preference_update_001",
+      "description": "The exact working preference receives an explicit replacement.",
+      "tags": ["update", "safe", "replacement"],
+      "user_message": "I now prefer remote work rather than working from an office.",
+      "operation": "update",
+      "proposed_content": "The user prefers remote work.",
+      "target_memory": {
+        "content": "The user prefers working from an office.",
+        "memory_type": "preference"
+      },
+      "expected": {"approved": true}
+    }
+    ,
+    {
+      "id": "validator_reject_same_proposition_rewrite_001",
+      "description": "Stronger commitment wording alone is not a durable replacement.",
+      "tags": ["update", "unsafe", "unnecessary_mutation", "taxonomy"],
+      "user_message": "I have decided to start saving for a home deposit.",
+      "operation": "update",
+      "proposed_content": "The user has decided to save for a home deposit.",
+      "target_memory": {
+        "content": "The user wants to save for a home deposit.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    },
+    {
+      "id": "validator_reject_commitment_rewrite_century_001",
+      "description": "Commitment wording alone does not materially replace an equivalent century-ride goal.",
+      "tags": ["update", "unsafe", "unnecessary_mutation", "consumed_holdout_v4"],
+      "user_message": "I committed to completing a century bike ride.",
+      "operation": "update",
+      "proposed_content": "The user has committed to completing a century bike ride.",
+      "target_memory": {
+        "content": "The user wants to complete a century bike ride.",
+        "memory_type": "goal"
+      },
+      "expected": {"approved": false}
+    }
+  ]
+}

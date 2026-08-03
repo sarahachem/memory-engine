@@ -1,0 +1,568 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryPlanner",
+  "input_boundary": "active_memories are an oracle set supplied directly to the planner; this dataset does not evaluate retrieval",
+  "description": "Curated planner cases covering mutation behavior and deterministic content faithfulness without exact-string comparison.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "correct_operation_set_rate",
+      "correct_target_index_rate",
+      "correct_create_memory_type_rate",
+      "content_faithfulness_rate",
+      "false_create_rate",
+      "missed_delete_rate"
+    ],
+    "ignored_for_exact_comparison": [
+      "confidence",
+      "explanation"
+    ],
+    "operation_order_matters": false
+  },
+  "cases": [
+    {
+      "id": "create_goal_001",
+      "description": "User explicitly states a new durable learning goal.",
+      "tags": ["create", "goal"],
+      "user_message": "I want to learn Japanese.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["learn", "Japanese"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "create_preference_001",
+      "description": "User states a durable working preference.",
+      "tags": ["create", "preference"],
+      "user_message": "I prefer to think through difficult conversations in writing before discussing them.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": ["difficult conversations", "writing"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "create_personal_fact_001",
+      "description": "User explicitly states a durable location fact.",
+      "tags": ["create", "personal_fact"],
+      "user_message": "I live in Berlin.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "personal_fact",
+            "content_assertions": {
+              "must_include": ["Berlin"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "create_value_001",
+      "description": "User explicitly identifies a durable personal value.",
+      "tags": ["create", "value"],
+      "user_message": "Autonomy is one of the most important values in my career.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "value",
+            "content_assertions": {
+              "must_include": ["autonomy", "career"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "create_decision_001",
+      "description": "User reports a consequential decision.",
+      "tags": ["create", "decision"],
+      "user_message": "I decided to accept the product lead role.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "decision",
+            "content_assertions": {
+              "must_include": ["accepted", "product lead"],
+              "must_not_include": ["rejected the product lead role"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "create_relationship_001",
+      "description": "User states durable relationship context.",
+      "tags": ["create", "relationship"],
+      "user_message": "My sister Nora is the person I usually turn to when I need honest feedback.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "relationship",
+            "content_assertions": {
+              "must_include": ["sister", "Nora", "honest feedback"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "update_location_001",
+      "description": "User replaces an existing location fact.",
+      "tags": ["update", "contradiction", "personal_fact"],
+      "user_message": "I now live in Berlin.",
+      "active_memories": [
+        {
+          "content": "The user lives in Munich.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["Berlin"],
+              "must_not_include": ["lives in Munich"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "update_goal_scope_001",
+      "description": "User adds a specific context to the same underlying goal.",
+      "tags": ["update", "goal"],
+      "user_message": "I specifically want to present confidently during work meetings.",
+      "active_memories": [
+        {
+          "content": "The user wants to become comfortable speaking in public.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["public speaking", "work meetings", "confident"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "update_preference_001",
+      "description": "User changes an existing communication preference.",
+      "tags": ["update", "preference", "contradiction"],
+      "user_message": "I have changed my mind: for work feedback, I now prefer a quick call instead of a long written message.",
+      "active_memories": [
+        {
+          "content": "The user prefers receiving work feedback in writing.",
+          "memory_type": "preference",
+          "confidence": 0.92
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["work feedback", "call"],
+              "must_not_include": ["prefers written feedback"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delete_goal_001",
+      "description": "User explicitly abandons an existing goal.",
+      "tags": ["delete", "goal"],
+      "user_message": "Public speaking is no longer my goal.",
+      "active_memories": [
+        {
+          "content": "The user wants to become comfortable speaking in public.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 0}
+        ]
+      }
+    },
+    {
+      "id": "delete_preference_001",
+      "description": "User explicitly says a stored dietary preference is no longer true.",
+      "tags": ["delete", "preference", "paraphrase"],
+      "user_message": "I am no longer vegetarian.",
+      "active_memories": [
+        {
+          "content": "The user is vegetarian.",
+          "memory_type": "preference",
+          "confidence": 0.97
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 0}
+        ]
+      }
+    },
+    {
+      "id": "delete_weak_overlap_001",
+      "description": "A paraphrased negation should delete the matching dietary memory despite weak lexical overlap.",
+      "tags": ["delete", "paraphrase", "weak_lexical_overlap"],
+      "user_message": "I have gone back to eating meat.",
+      "active_memories": [
+        {
+          "content": "The user follows a vegetarian diet.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 0}
+        ]
+      }
+    },
+    {
+      "id": "noop_weather_001",
+      "description": "A one-time weather observation is not durable personal information.",
+      "tags": ["noop", "insignificant"],
+      "user_message": "It rained this afternoon.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "noop_temporary_mood_001",
+      "description": "A temporary mood should not become long-term memory.",
+      "tags": ["noop", "temporary"],
+      "user_message": "I feel tired and irritated today.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "noop_help_request_001",
+      "description": "A request for advice contains no durable user fact.",
+      "tags": ["noop", "request"],
+      "user_message": "Can you help me prepare for a difficult conversation?",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "noop_duplicate_001",
+      "description": "Information already represented by active memory should not be created again.",
+      "tags": ["noop", "duplicate", "false_create_guard"],
+      "user_message": "I want to learn Japanese.",
+      "active_memories": [
+        {
+          "content": "The user wants to learn Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "noop_single_event_pattern_001",
+      "description": "One difficult event must not be generalized into a recurring pattern.",
+      "tags": ["noop", "recurring_pattern", "unsupported_inference", "false_create_guard"],
+      "user_message": "I avoided one difficult conversation with my manager yesterday.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "create_supported_pattern_001",
+      "description": "Explicit recurrence language supports a recurring-pattern memory.",
+      "tags": ["create", "recurring_pattern"],
+      "user_message": "I keep avoiding difficult conversations because I worry about upsetting people.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "recurring_pattern",
+            "content_assertions": {
+              "must_include": ["difficult conversations", "upsetting people"],
+              "must_not_include": ["one time"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "noop_ambiguous_goal_001",
+      "description": "A tentative possibility is not yet an explicit durable goal.",
+      "tags": ["noop", "ambiguous", "false_create_guard"],
+      "user_message": "Maybe I should learn guitar someday.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "noop_vague_reference_001",
+      "description": "A vague reference does not state memory content.",
+      "tags": ["noop", "ambiguous"],
+      "user_message": "Please remember what we discussed earlier.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {"operation": "noop"}
+        ]
+      }
+    },
+    {
+      "id": "delete_create_goal_001",
+      "description": "User abandons one goal and explicitly introduces another.",
+      "tags": ["delete", "create", "multiple_operations", "goal"],
+      "user_message": "Public speaking is no longer my goal. I want to become a better leader.",
+      "active_memories": [
+        {
+          "content": "The user wants to become comfortable speaking in public.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 0},
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["better leader"],
+              "must_not_include": ["public speaking"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "unmatched_delete_create_001",
+      "description": "Negated information with no matching active memory must not produce a placeholder delete.",
+      "tags": ["create", "unmatched_delete", "false_delete_guard"],
+      "user_message": "Public speaking is no longer my goal. I want to become a better leader.",
+      "active_memories": [
+        {
+          "content": "The user avoids difficult conversations because they worry about upsetting people.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["better leader"],
+              "must_not_include": ["public speaking"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "target_index_multiple_goals_001",
+      "description": "The planner must delete the correct goal when several related goals are supplied.",
+      "tags": ["delete", "target_index", "multiple_related_memories"],
+      "user_message": "Running a marathon is no longer one of my goals.",
+      "active_memories": [
+        {
+          "content": "The user wants to exercise three times per week.",
+          "memory_type": "goal",
+          "confidence": 0.93
+        },
+        {
+          "content": "The user wants to run a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "content": "The user wants to improve their sleep routine.",
+          "memory_type": "goal",
+          "confidence": 0.91
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 1}
+        ]
+      }
+    },
+    {
+      "id": "target_index_multiple_preferences_001",
+      "description": "The planner must update the matching preference and leave a related preference untouched.",
+      "tags": ["update", "target_index", "multiple_related_memories"],
+      "user_message": "For serious work feedback, I now prefer a video call rather than written comments.",
+      "active_memories": [
+        {
+          "content": "The user prefers written feedback for serious work discussions.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "content": "The user prefers organizing their thoughts before conflict conversations.",
+          "memory_type": "preference",
+          "confidence": 0.92
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["work feedback", "video call"],
+              "must_not_include": ["prefers written feedback"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "update_weak_overlap_001",
+      "description": "A semantic correction should update the correct memory despite limited word overlap.",
+      "tags": ["update", "paraphrase", "weak_lexical_overlap"],
+      "user_message": "I switched careers and now work as a product manager.",
+      "active_memories": [
+        {
+          "content": "The user is a software engineer.",
+          "memory_type": "personal_fact",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "operations": [
+          {
+            "operation": "update",
+            "memory_index": 0,
+            "content_assertions": {
+              "must_include": ["product manager"],
+              "must_not_include": ["works as a software engineer"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "multiple_create_001",
+      "description": "Two independent durable statements should produce two creates.",
+      "tags": ["create", "multiple_operations"],
+      "user_message": "I live in Berlin, and I want to learn Japanese this year.",
+      "active_memories": [],
+      "expected": {
+        "operations": [
+          {
+            "operation": "create",
+            "memory_type": "personal_fact",
+            "content_assertions": {
+              "must_include": ["Berlin"],
+              "must_not_include": []
+            }
+          },
+          {
+            "operation": "create",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": ["learn", "Japanese"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delete_and_update_001",
+      "description": "One message invalidates a goal and modifies a separate preference.",
+      "tags": ["delete", "update", "multiple_operations"],
+      "user_message": "I have dropped the marathon goal, and I now prefer exercising in the evening instead of the morning.",
+      "active_memories": [
+        {
+          "content": "The user wants to run a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.96
+        },
+        {
+          "content": "The user prefers exercising in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.91
+        }
+      ],
+      "expected": {
+        "operations": [
+          {"operation": "delete", "memory_index": 0},
+          {
+            "operation": "update",
+            "memory_index": 1,
+            "content_assertions": {
+              "must_include": ["exercise", "evening"],
+              "must_not_include": ["prefers exercising in the morning"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

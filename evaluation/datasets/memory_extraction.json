@@ -1,0 +1,581 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryFactExtractor",
+  "description": "Development cases for semantic extraction of atomic, durable memory facts from complete user messages.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "semantic_judge_valid_rate",
+      "fact_precision",
+      "fact_recall",
+      "fact_f1",
+      "compound_fact_recall",
+      "content_faithfulness_rate",
+      "kind_accuracy",
+      "memory_type_accuracy",
+      "evidence_selection_accuracy",
+      "evidence_grounding_rate",
+      "raw_false_memory_rate",
+      "false_memory_rate",
+      "duplicate_fact_rate",
+      "low_confidence_fact_rate"
+    ],
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "semantic_judge_valid_rate": {"minimum": 1.0},
+      "fact_precision": {"minimum": 0.9},
+      "fact_recall": {"minimum": 0.9},
+      "compound_fact_recall": {"minimum": 0.9},
+      "evidence_grounding_rate": {"minimum": 1.0},
+      "false_memory_rate": {"maximum": 0.0},
+      "duplicate_fact_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "extract_dev_preference_001",
+      "description": "Extract one explicit durable preference.",
+      "tags": ["assertion", "preference", "single"],
+      "user_message": "I prefer receiving feedback in writing.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer receiving feedback in writing"],
+            "content_assertions": {
+              "must_include": ["prefer", "feedback", "writing"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_goal_001",
+      "description": "Extract one clearly committed long-term goal.",
+      "tags": ["assertion", "goal", "single"],
+      "user_message": "I want to become comfortable speaking in public.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to become comfortable speaking in public"],
+            "content_assertions": {
+              "must_include": ["comfortable", "speaking", "public"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_personal_fact_001",
+      "description": "Extract one current personal fact.",
+      "tags": ["assertion", "personal_fact", "single"],
+      "user_message": "I live in Berlin.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Berlin"],
+            "content_assertions": {
+              "must_include": ["live", "Berlin"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_pattern_001",
+      "description": "Explicit recurrence supports a recurring pattern.",
+      "tags": ["assertion", "recurring_pattern", "single"],
+      "user_message": "I keep postponing difficult conversations until the last minute.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["I keep postponing difficult conversations until the last minute"],
+            "content_assertions": {
+              "must_include": ["postpone", "difficult conversations", "last minute"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_decision_001",
+      "description": "Extract an explicit durable decision.",
+      "tags": ["assertion", "decision", "single"],
+      "user_message": "I decided to accept the position in Hamburg.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "decision",
+            "accepted_evidence": ["I decided to accept the position in Hamburg"],
+            "content_assertions": {
+              "must_include": ["accept", "position", "Hamburg"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_value_001",
+      "description": "Extract an explicitly stated personal value.",
+      "tags": ["assertion", "value", "single"],
+      "user_message": "Being honest even when it is uncomfortable is important to me.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": ["Being honest even when it is uncomfortable is important to me"],
+            "content_assertions": {
+              "must_include": ["uncomfortable"],
+              "must_include_any": [
+                ["honest"],
+                ["honesty"]
+              ],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_relationship_001",
+      "description": "Extract two atomic facts from one relationship statement.",
+      "tags": ["compound", "assertion", "relationship", "multi_fact"],
+      "user_message": "Nadia is my sister and we work together.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "relationship",
+            "accepted_memory_types": ["relationship", "personal_fact"],
+            "accepted_evidence": ["Nadia is my sister and we work together", "Nadia is my sister"],
+            "content_assertions": {
+              "must_include": ["Nadia", "sister"],
+              "must_not_include": []
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "relationship",
+            "accepted_evidence": ["we work together", "Nadia is my sister and we work together"],
+            "content_assertions": {
+              "must_include": ["Nadia", "work"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_request_001",
+      "description": "A request for help is not a durable memory.",
+      "tags": ["negative", "request", "false_memory"],
+      "user_message": "Can you help me prepare for tomorrow's presentation?",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_dev_tentative_001",
+      "description": "Tentative exploration is not a committed goal.",
+      "tags": ["negative", "tentative", "false_memory"],
+      "user_message": "Maybe I should learn guitar someday.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_dev_temporary_001",
+      "description": "A temporary mood is not long-term memory.",
+      "tags": ["negative", "temporary", "false_memory"],
+      "user_message": "I feel exhausted this afternoon.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_dev_single_event_001",
+      "description": "One event must not become a recurring pattern.",
+      "tags": ["negative", "single_event", "false_memory"],
+      "user_message": "I avoided one difficult conversation yesterday.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_dev_compound_two_001",
+      "description": "Two independent assertions are extracted from a punctuated message.",
+      "tags": ["compound", "assertion", "multi_fact"],
+      "user_message": "I want to learn Japanese. I prefer studying early in the morning.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to learn Japanese"],
+            "content_assertions": {
+              "must_include": ["learn", "Japanese"],
+              "must_not_include": ["morning"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer studying early in the morning"],
+            "content_assertions": {
+              "must_include": ["prefer", "studying", "morning"],
+              "must_not_include": ["Japanese"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_compound_unpunctuated_001",
+      "description": "An invalidation and unrelated assertion are recovered without punctuation.",
+      "tags": ["compound", "invalidation", "assertion", "no_punctuation", "critical"],
+      "user_message": "I gave up opening a bakery and I prefer receiving feedback face to face",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "goal",
+            "accepted_evidence": ["I gave up opening a bakery"],
+            "content_assertions": {
+              "must_include": ["bakery"],
+              "must_include_any": [
+                ["no longer", "open"],
+                ["gave up", "opening"]
+              ],
+              "must_not_include": ["feedback"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer receiving feedback face to face"],
+            "content_assertions": {
+              "must_include": ["prefer", "feedback", "face to face"],
+              "must_not_include": ["bakery"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_compound_three_001",
+      "description": "Three independent durable assertions are extracted atomically.",
+      "tags": ["compound", "assertion", "multi_fact"],
+      "user_message": "I live in Munich, I value independence, and I want to finish my degree.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Munich"],
+            "content_assertions": {
+              "must_include": ["live", "Munich"],
+              "must_not_include": ["independence", "degree"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": ["I value independence"],
+            "content_assertions": {
+              "must_include": ["value", "independence"],
+              "must_not_include": ["Munich", "degree"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to finish my degree"],
+            "content_assertions": {
+              "must_include": ["finish", "degree"],
+              "must_not_include": ["Munich", "independence"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_invalidation_goal_001",
+      "description": "Extract an explicit goal invalidation independently of stored state.",
+      "tags": ["invalidation", "goal", "single"],
+      "user_message": "Running a marathon is no longer one of my goals.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "goal",
+            "accepted_evidence": ["Running a marathon is no longer one of my goals"],
+            "content_assertions": {
+              "must_include": ["marathon"],
+              "must_include_any": [
+                ["no longer", "goal"],
+                ["no longer", "want", "run"]
+              ],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_invalidation_preference_001",
+      "description": "Extract an explicitly ended preference.",
+      "tags": ["invalidation", "preference", "single"],
+      "user_message": "I no longer prefer detailed explanations.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "preference",
+            "accepted_evidence": ["I no longer prefer detailed explanations"],
+            "content_assertions": {
+              "must_include": ["no longer", "prefer", "detailed explanations"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_mixed_eligible_001",
+      "description": "An invalidation must not suppress a separate new goal.",
+      "tags": ["compound", "invalidation", "assertion", "multi_fact"],
+      "user_message": "I dropped my plan to write a novel, but I want to start a podcast.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "goal",
+            "accepted_evidence": ["I dropped my plan to write a novel"],
+            "content_assertions": {
+              "must_include": ["novel"],
+              "must_include_any": [
+                ["no longer", "write"],
+                ["dropped", "write"]
+              ],
+              "must_not_include": ["podcast"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to start a podcast"],
+            "content_assertions": {
+              "must_include": ["start", "podcast"],
+              "must_not_include": ["novel"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_tentative_plus_valid_001",
+      "description": "An ineligible tentative clause must not suppress a valid preference.",
+      "tags": ["compound", "tentative", "assertion"],
+      "user_message": "Maybe I will learn piano one day, but I prefer practical examples.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer practical examples"],
+            "content_assertions": {
+              "must_include": ["prefer", "practical examples"],
+              "must_not_include": ["piano"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_request_plus_valid_001",
+      "description": "A help request is ignored while a durable fact is extracted.",
+      "tags": ["compound", "request", "assertion"],
+      "user_message": "Can you help me plan my week? I work as an Android developer.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I work as an Android developer"],
+            "content_assertions": {
+              "must_include": ["work", "Android developer"],
+              "must_not_include": ["plan", "week"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_repeated_clause_001",
+      "description": "Repeated wording produces one atomic fact rather than duplicates.",
+      "tags": ["assertion", "duplicate_safety"],
+      "user_message": "I prefer concise answers; concise answers are what I prefer.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer concise answers", "concise answers are what I prefer"],
+            "content_assertions": {
+              "must_include": ["prefer", "concise answers"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_isolated_workout_001",
+      "description": "One missed workout is an event, not a recurring pattern.",
+      "tags": ["negative", "single_event", "recurrence_contrast", "false_memory"],
+      "user_message": "I missed one workout yesterday evening.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_dev_repeated_workout_001",
+      "description": "Explicit repetition supports a recurring pattern.",
+      "tags": ["assertion", "recurring_pattern", "recurrence_contrast"],
+      "user_message": "I repeatedly skip workouts whenever work becomes busy.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["I repeatedly skip workouts whenever work becomes busy"],
+            "content_assertions": {
+              "must_include": ["repeatedly", "skip", "workouts", "work", "busy"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_isolated_email_plus_preference_001",
+      "description": "An isolated event is ignored without suppressing a durable preference.",
+      "tags": ["compound", "single_event", "preference", "recurrence_contrast"],
+      "user_message": "I delayed one important email this morning, and I prefer weekly check-ins.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer weekly check-ins"],
+            "content_assertions": {
+              "must_include": ["prefer", "weekly check-ins"],
+              "must_not_include": ["email", "morning"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_usual_email_pattern_001",
+      "description": "Explicit usual behavior supports a recurring pattern.",
+      "tags": ["assertion", "recurring_pattern", "recurrence_contrast"],
+      "user_message": "I usually delay important emails until the deadline.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["I usually delay important emails until the deadline"],
+            "content_assertions": {
+              "must_include": ["usually", "delay", "important emails", "deadline"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    }
+    ,
+    {
+      "id": "extract_dev_semantic_final_evening_001",
+      "description": "A faithful synonym preserves the recurring deadline pattern.",
+      "tags": ["recurrence", "semantic_paraphrase", "consumed_holdout"],
+      "user_message": "Almost every time a deadline gets close, I avoid opening the project until the last evening.",
+      "expected": {"facts": [{
+        "kind": "assertion",
+        "memory_type": "recurring_pattern",
+        "accepted_evidence": ["Almost every time a deadline gets close, I avoid opening the project until the last evening"],
+        "content_assertions": {"must_include": ["deadline", "avoid", "project", "last evening"], "must_not_include": []}
+      }]}
+    },
+    {
+      "id": "extract_dev_semantic_relationship_with_001",
+      "description": "Atomic relationship wording may use with instead of together.",
+      "tags": ["compound", "relationship", "semantic_paraphrase", "consumed_holdout"],
+      "user_message": "Leila is my cousin, and Leila and I run the design studio together.",
+      "expected": {"facts": [
+        {"kind": "assertion", "memory_type": "relationship", "accepted_evidence": ["Leila is my cousin"], "content_assertions": {"must_include": ["Leila", "cousin"], "must_not_include": ["design studio"]}},
+        {"kind": "assertion", "memory_type": "relationship", "accepted_evidence": ["Leila and I run the design studio together"], "content_assertions": {"must_include": ["Leila", "design studio", "together"], "must_not_include": ["cousin"]}}
+      ]}
+    },
+    {
+      "id": "extract_dev_semantic_reversed_decision_001",
+      "description": "An invalidation paraphrase may state no longer decided instead of reversed.",
+      "tags": ["compound", "invalidation", "semantic_paraphrase", "consumed_holdout"],
+      "user_message": "I reversed my decision to buy the cabin, and I now want to train as a mediator.",
+      "expected": {"facts": [
+        {"kind": "invalidation", "memory_type": "decision", "accepted_evidence": ["I reversed my decision to buy the cabin"], "content_assertions": {"must_include": ["reversed", "buy", "cabin"], "must_not_include": ["mediator"]}},
+        {"kind": "assertion", "memory_type": "goal", "accepted_evidence": ["I now want to train as a mediator"], "content_assertions": {"must_include": ["train", "mediator"], "must_not_include": ["cabin"]}}
+      ]}
+    },
+    {
+      "id": "extract_dev_atomic_recurring_unsent_replies_001",
+      "description": "A recurring sequence may be represented as two independently changeable atomic patterns.",
+      "tags": ["recurring_pattern", "atomic_decomposition", "consumed_holdout_v4"],
+      "user_message": "Whenever a reply feels emotionally difficult, I rewrite it for hours and then avoid sending it.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["Whenever a reply feels emotionally difficult, I rewrite it for hours and then avoid sending it"],
+            "content_assertions": {
+              "must_include": ["difficult reply", "rewrite", "avoid sending"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_dev_wider_grounded_value_evidence_001",
+      "description": "One faithful value may cite a wider grounded span containing two equivalent clauses.",
+      "tags": ["value", "evidence_span", "consumed_holdout_v4"],
+      "user_message": "I value keeping my promises; following through on commitments is deeply important to me.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": [
+              "I value keeping my promises",
+              "following through on commitments is deeply important to me"
+            ],
+            "content_assertions": {
+              "must_include": ["promises"],
+              "must_include_any": [
+                ["keeping", "promises"],
+                ["following through", "commitments"]
+              ],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryReranker",
+  "description": "Development cases for final response-context memory selection. These cases may guide reranker prompt development.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "context_precision", "context_recall", "context_f1",
+      "valid_none_accuracy", "false_none_rate",
+      "irrelevant_inclusion_rate", "inactive_memory_leakage_rate",
+      "schema_valid_response_rate", "average_selection_size", "average_latency_ms"
+    ],
+    "acceptance_gates": {
+      "context_precision": {"minimum": 0.95},
+      "context_recall": {"minimum": 0.90},
+      "valid_none_accuracy": {"minimum": 0.95},
+      "inactive_memory_leakage_rate": {"maximum": 0.0},
+      "schema_valid_response_rate": {"minimum": 1.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "context_dev_language_001", "description": "Reject a topically similar goal in the wrong language.",
+      "tags": ["same_topic", "goal"], "message": "I want to learn Japanese.", "intent": "goal_planning", "limit": 3,
+      "candidates": [
+        {"id": "japanese", "content": "The user wants to learn Japanese.", "memory_type": "goal", "candidate_score": 0.84},
+        {"id": "spanish", "content": "The user wants to improve their Spanish.", "memory_type": "goal", "candidate_score": 0.62}
+      ], "expected_selected_ids": ["japanese"]
+    },
+    {
+      "id": "context_dev_none_001", "description": "Unrelated memories produce a valid empty selection.",
+      "tags": ["none_relevant"], "message": "Explain attachment theory.", "intent": "learning", "limit": 3,
+      "candidates": [
+        {"id": "berlin", "content": "The user lives in Berlin.", "memory_type": "personal_fact", "candidate_score": 0.34},
+        {"id": "exercise", "content": "The user prefers evening exercise.", "memory_type": "preference", "candidate_score": 0.31}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_dev_public_speaking_001", "description": "Choose the scoped speaking goal, not a related leadership goal.",
+      "tags": ["same_type", "related_goal"], "message": "How can I present confidently in work meetings?", "intent": "goal_planning", "limit": 3,
+      "candidates": [
+        {"id": "speaking", "content": "The user wants to become comfortable speaking in public.", "memory_type": "goal", "candidate_score": 0.60},
+        {"id": "leadership", "content": "The user wants to become a better leader.", "memory_type": "goal", "candidate_score": 0.52}
+      ], "expected_selected_ids": ["speaking"]
+    },
+    {
+      "id": "context_dev_multiple_001", "description": "Retain two memories needed by a compound message.",
+      "tags": ["compound", "multiple_relevant"], "message": "I dropped my marathon goal and now prefer evening exercise.", "intent": "reflection", "limit": 3,
+      "candidates": [
+        {"id": "marathon", "content": "The user wants to run a marathon.", "memory_type": "goal", "candidate_score": 0.51},
+        {"id": "exercise-time", "content": "The user prefers exercising in the morning.", "memory_type": "preference", "candidate_score": 0.50},
+        {"id": "sleep", "content": "The user wants to improve their sleep.", "memory_type": "goal", "candidate_score": 0.39}
+      ], "expected_selected_ids": ["marathon", "exercise-time"]
+    },
+    {
+      "id": "context_dev_entity_001", "description": "Keep the relationship for the named person only.",
+      "tags": ["same_entity", "relationship"], "message": "I need to talk with my sister Nora.", "intent": "decision_support", "limit": 2,
+      "candidates": [
+        {"id": "nora", "content": "The user's sister Nora gives them honest feedback.", "memory_type": "relationship", "candidate_score": 0.59},
+        {"id": "manager", "content": "The user has weekly meetings with their manager.", "memory_type": "relationship", "candidate_score": 0.32}
+      ], "expected_selected_ids": ["nora"]
+    },
+    {
+      "id": "context_dev_value_001", "description": "Use a career value for a related job decision.",
+      "tags": ["value", "cross_type"], "message": "Would this role give me enough independence?", "intent": "decision_support", "limit": 2,
+      "candidates": [
+        {"id": "autonomy", "content": "The user values autonomy in their career.", "memory_type": "value", "candidate_score": 0.60},
+        {"id": "location", "content": "The user lives in Berlin.", "memory_type": "personal_fact", "candidate_score": 0.31}
+      ], "expected_selected_ids": ["autonomy"]
+    },
+    {
+      "id": "context_dev_wrong_relationship_001", "description": "Same person but wrong relationship detail is not automatically useful.",
+      "tags": ["same_entity", "hard_negative"], "message": "What goal did I set with Nadia?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "nadia-sister", "content": "Nadia is the user's sister.", "memory_type": "relationship", "candidate_score": 0.58},
+        {"id": "nadia-goal", "content": "The user and Nadia plan to start a business.", "memory_type": "goal", "candidate_score": 0.55}
+      ], "expected_selected_ids": ["nadia-goal"]
+    },
+    {
+      "id": "context_dev_feedback_001", "description": "Reject same-type preferences about unrelated subjects.",
+      "tags": ["same_type", "preference"], "message": "How do I prefer receiving feedback?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "feedback", "content": "The user prefers work feedback in writing.", "memory_type": "preference", "candidate_score": 0.59},
+        {"id": "food", "content": "The user prefers spicy food.", "memory_type": "preference", "candidate_score": 0.35}
+      ], "expected_selected_ids": ["feedback"]
+    },
+    {
+      "id": "context_dev_generic_hello_001", "description": "A greeting needs no personal memory.",
+      "tags": ["none_relevant", "general"], "message": "Hello, how are you?", "intent": "general_conversation", "limit": 3,
+      "candidates": [
+        {"id": "goal", "content": "The user wants to learn German.", "memory_type": "goal", "candidate_score": 0.28}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_dev_pattern_001", "description": "Use a recurring avoidance pattern for reflection.",
+      "tags": ["pattern", "paraphrase"], "message": "Why do I keep putting off difficult conversations?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "avoidance", "content": "The user often avoids hard conversations because they fear upsetting people.", "memory_type": "recurring_pattern", "candidate_score": 0.57},
+        {"id": "planning", "content": "The user prefers preparing notes before meetings.", "memory_type": "preference", "candidate_score": 0.40}
+      ], "expected_selected_ids": ["avoidance"]
+    },
+    {
+      "id": "context_dev_inactive_001", "description": "Inactive memories may never enter final context.",
+      "tags": ["inactive", "safety"], "message": "Am I still training for a marathon?", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "old-marathon", "content": "The user wants to run a marathon.", "memory_type": "goal", "status": "invalidated", "candidate_score": 0.80},
+        {"id": "exercise", "content": "The user wants to exercise regularly.", "memory_type": "goal", "candidate_score": 0.48}
+      ], "expected_selected_ids": []
+    },
+    {
+      "id": "context_dev_limit_001", "description": "Select only the most useful memories within the final limit.",
+      "tags": ["limit", "multiple_relevant"], "message": "Summarize my current learning goals.", "intent": "reflection", "limit": 2,
+      "candidates": [
+        {"id": "german", "content": "The user wants to become fluent in German.", "memory_type": "goal", "candidate_score": 0.70},
+        {"id": "python", "content": "The user wants to learn advanced Python.", "memory_type": "goal", "candidate_score": 0.68},
+        {"id": "guitar", "content": "The user may want to learn guitar someday.", "memory_type": "goal", "candidate_score": 0.55}
+      ], "expected_selected_ids": ["german", "python"]
+    }
+  ]
+}

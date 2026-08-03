@@ -1,0 +1,2245 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "SemanticCandidateRetriever",
+  "input_boundary": "candidate_memories are the full retrieval corpus for one synthetic user; this dataset does not evaluate planner behavior",
+  "description": "Development dataset for hard-negative, realistic-scale candidate retrieval: 15-20 candidate memories per case with near-duplicate topics, superseded/invalidated lexical-closer decoys, same-type crowding, and multilingual candidates. Tune against this before freezing any candidate-retrieval holdout.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "recall_at_k",
+      "precision_at_k",
+      "mean_reciprocal_rank",
+      "critical_memory_miss_rate",
+      "irrelevant_memory_inclusion_rate",
+      "inactive_memory_leakage_rate"
+    ],
+    "relevance_identity": "memory_id",
+    "default_status": "active",
+    "acceptance_gates": {
+      "recall_at_k": {
+        "minimum": 0.9
+      },
+      "mean_reciprocal_rank": {
+        "minimum": 0.85
+      },
+      "critical_memory_miss_rate": {
+        "maximum": 0.0
+      },
+      "inactive_memory_leakage_rate": {
+        "maximum": 0.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "hardneg_bank_a_japanese_001",
+      "description": "Active Japanese-learning goals must beat an inactive Spanish goal and a casual French fact.",
+      "tags": [
+        "hard_negative",
+        "language",
+        "near_duplicate",
+        "invalidated_decoy",
+        "goal"
+      ],
+      "query": "I want to start learning Japanese seriously.",
+      "candidate_memories": [
+        {
+          "id": "a-career-switch",
+          "content": "The user is switching careers from marketing to software engineering.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-goal",
+          "content": "The user wants to learn Spanish.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-japanese-goal",
+          "content": "The user is actively learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-remote-pref",
+          "content": "The user prefers remote work over commuting to an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-commute-pattern",
+          "content": "The user gets frustrated by long commutes on days they must go in.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-mentor-relationship",
+          "content": "The user has a mentor at work named Priya.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-cert-decision",
+          "content": "The user decided to pursue an AWS certification instead of a PMP.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-procrastination-pattern",
+          "content": "The user tends to procrastinate on take-home coding projects.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-negotiation-value",
+          "content": "The user values negotiating fair compensation rather than accepting the first offer.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-python-fact",
+          "content": "The user already has strong Python skills.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-jlpt-goal",
+          "content": "The user is training for the JLPT N4 exam in March.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-marketing-goal",
+          "content": "The user wanted a promotion in their marketing role.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-speaking-fear",
+          "content": "The user feels anxious about public speaking at conferences.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-abandoned",
+          "content": "The user wanted to learn Spanish but gave up after a few months.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-sister-relationship",
+          "content": "The user is close with their sister Elena.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-gym-pattern",
+          "content": "The user goes to the gym three times a week.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-french-fact",
+          "content": "The user took French in high school as a casual elective.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-deadline-value",
+          "content": "The user values calm, realistic deadlines over crunch culture.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-startup-fact",
+          "content": "The user worked at an early-stage startup three years ago.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "a-bootcamp-fact",
+          "content": "The user completed a coding bootcamp last year.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "a-japanese-goal",
+        "a-jlpt-goal"
+      ],
+      "critical_relevant_ids": [
+        "a-japanese-goal"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_a_cert_001",
+      "description": "A specific certification decision must beat adjacent but distinct career facts.",
+      "tags": [
+        "hard_negative",
+        "career",
+        "decision",
+        "same_domain_distractors"
+      ],
+      "query": "I just passed my AWS certification exam!",
+      "candidate_memories": [
+        {
+          "id": "a-career-switch",
+          "content": "The user is switching careers from marketing to software engineering.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-goal",
+          "content": "The user wants to learn Spanish.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-japanese-goal",
+          "content": "The user is actively learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-remote-pref",
+          "content": "The user prefers remote work over commuting to an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-commute-pattern",
+          "content": "The user gets frustrated by long commutes on days they must go in.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-mentor-relationship",
+          "content": "The user has a mentor at work named Priya.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-cert-decision",
+          "content": "The user decided to pursue an AWS certification instead of a PMP.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-procrastination-pattern",
+          "content": "The user tends to procrastinate on take-home coding projects.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-negotiation-value",
+          "content": "The user values negotiating fair compensation rather than accepting the first offer.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-python-fact",
+          "content": "The user already has strong Python skills.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-jlpt-goal",
+          "content": "The user is training for the JLPT N4 exam in March.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-marketing-goal",
+          "content": "The user wanted a promotion in their marketing role.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-speaking-fear",
+          "content": "The user feels anxious about public speaking at conferences.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-abandoned",
+          "content": "The user wanted to learn Spanish but gave up after a few months.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-sister-relationship",
+          "content": "The user is close with their sister Elena.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-gym-pattern",
+          "content": "The user goes to the gym three times a week.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-french-fact",
+          "content": "The user took French in high school as a casual elective.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-deadline-value",
+          "content": "The user values calm, realistic deadlines over crunch culture.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-startup-fact",
+          "content": "The user worked at an early-stage startup three years ago.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "a-bootcamp-fact",
+          "content": "The user completed a coding bootcamp last year.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "a-cert-decision"
+      ],
+      "critical_relevant_ids": [
+        "a-cert-decision"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_a_commute_001",
+      "description": "Commute frustration and the related remote-work preference should surface over an unrelated recurring pattern.",
+      "tags": [
+        "hard_negative",
+        "work",
+        "multiple_relevant"
+      ],
+      "query": "My commute is really wearing me down lately.",
+      "candidate_memories": [
+        {
+          "id": "a-career-switch",
+          "content": "The user is switching careers from marketing to software engineering.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-goal",
+          "content": "The user wants to learn Spanish.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-japanese-goal",
+          "content": "The user is actively learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-remote-pref",
+          "content": "The user prefers remote work over commuting to an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-commute-pattern",
+          "content": "The user gets frustrated by long commutes on days they must go in.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-mentor-relationship",
+          "content": "The user has a mentor at work named Priya.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-cert-decision",
+          "content": "The user decided to pursue an AWS certification instead of a PMP.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-procrastination-pattern",
+          "content": "The user tends to procrastinate on take-home coding projects.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-negotiation-value",
+          "content": "The user values negotiating fair compensation rather than accepting the first offer.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-python-fact",
+          "content": "The user already has strong Python skills.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-jlpt-goal",
+          "content": "The user is training for the JLPT N4 exam in March.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-marketing-goal",
+          "content": "The user wanted a promotion in their marketing role.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-speaking-fear",
+          "content": "The user feels anxious about public speaking at conferences.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-abandoned",
+          "content": "The user wanted to learn Spanish but gave up after a few months.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-sister-relationship",
+          "content": "The user is close with their sister Elena.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-gym-pattern",
+          "content": "The user goes to the gym three times a week.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-french-fact",
+          "content": "The user took French in high school as a casual elective.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-deadline-value",
+          "content": "The user values calm, realistic deadlines over crunch culture.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-startup-fact",
+          "content": "The user worked at an early-stage startup three years ago.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "a-bootcamp-fact",
+          "content": "The user completed a coding bootcamp last year.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "a-commute-pattern",
+        "a-remote-pref"
+      ],
+      "critical_relevant_ids": [
+        "a-commute-pattern"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_a_speaking_001",
+      "description": "Conference speaking anxiety must not be confused with an unrelated mentor relationship or deadline value.",
+      "tags": [
+        "hard_negative",
+        "emotion",
+        "precision"
+      ],
+      "query": "I'm nervous about presenting at the conference next week.",
+      "candidate_memories": [
+        {
+          "id": "a-career-switch",
+          "content": "The user is switching careers from marketing to software engineering.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-goal",
+          "content": "The user wants to learn Spanish.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-japanese-goal",
+          "content": "The user is actively learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-remote-pref",
+          "content": "The user prefers remote work over commuting to an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-commute-pattern",
+          "content": "The user gets frustrated by long commutes on days they must go in.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-mentor-relationship",
+          "content": "The user has a mentor at work named Priya.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-cert-decision",
+          "content": "The user decided to pursue an AWS certification instead of a PMP.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-procrastination-pattern",
+          "content": "The user tends to procrastinate on take-home coding projects.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-negotiation-value",
+          "content": "The user values negotiating fair compensation rather than accepting the first offer.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-python-fact",
+          "content": "The user already has strong Python skills.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-jlpt-goal",
+          "content": "The user is training for the JLPT N4 exam in March.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-marketing-goal",
+          "content": "The user wanted a promotion in their marketing role.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-speaking-fear",
+          "content": "The user feels anxious about public speaking at conferences.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-spanish-abandoned",
+          "content": "The user wanted to learn Spanish but gave up after a few months.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "a-sister-relationship",
+          "content": "The user is close with their sister Elena.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-gym-pattern",
+          "content": "The user goes to the gym three times a week.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-french-fact",
+          "content": "The user took French in high school as a casual elective.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-deadline-value",
+          "content": "The user values calm, realistic deadlines over crunch culture.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "a-old-startup-fact",
+          "content": "The user worked at an early-stage startup three years ago.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "a-bootcamp-fact",
+          "content": "The user completed a coding bootcamp last year.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "a-speaking-fear"
+      ],
+      "critical_relevant_ids": [
+        "a-speaking-fear"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_b_mother_001",
+      "description": "Mother-specific relationship and conflict pattern must beat other family relationships and an ended relationship.",
+      "tags": [
+        "hard_negative",
+        "relationship",
+        "same_type_distractors",
+        "family"
+      ],
+      "query": "Things have been tense with my mom again.",
+      "candidate_memories": [
+        {
+          "id": "b-mother-relationship",
+          "content": "The user has a close but complicated relationship with their mother.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-father-relationship",
+          "content": "The user has a distant relationship with their father.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-relationship",
+          "content": "The user has a supportive relationship with their younger sister Mia.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-partner-relationship",
+          "content": "The user has lived with their partner Alex for two years.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-friend-relationship",
+          "content": "The user's best friend Jordan has been close since college.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-boss-relationship",
+          "content": "The user has a tense relationship with their manager.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-therapist-fact",
+          "content": "The user sees a therapist every two weeks.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-anxiety-pattern",
+          "content": "The user experiences anxiety before family gatherings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sleep-goal",
+          "content": "The user wants to improve their sleep quality.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-caffeine-fact",
+          "content": "The user drinks about three coffees a day.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-strength-decision",
+          "content": "The user decided to prioritize strength training over cardio.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-honesty-value",
+          "content": "The user values honesty even when it is uncomfortable.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-mother-conflict-pattern",
+          "content": "The user has recurring arguments with their mother about career choices.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-old-partner-relationship",
+          "content": "The user used to date someone named Sam.",
+          "memory_type": "relationship",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "b-running-goal",
+          "content": "The user is training for a 10k race.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-meditation-pattern",
+          "content": "The user meditates most mornings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-distance-fact",
+          "content": "The user used to be distant from their sister.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "b-couples-therapy-decision",
+          "content": "The user decided to start couples therapy with their partner.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-alcohol-goal",
+          "content": "The user is cutting back on drinking alcohol.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-nephew-relationship",
+          "content": "The user is close with their nephew Theo, their sister's son.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "b-mother-relationship",
+        "b-mother-conflict-pattern"
+      ],
+      "critical_relevant_ids": [
+        "b-mother-relationship"
+      ],
+      "limit": 6
+    },
+    {
+      "id": "hardneg_bank_b_partner_001",
+      "description": "Current partner and the couples-therapy decision must beat a therapist fact and an ended past relationship.",
+      "tags": [
+        "hard_negative",
+        "relationship",
+        "decision",
+        "invalidated_decoy"
+      ],
+      "query": "Alex and I started couples counseling this week.",
+      "candidate_memories": [
+        {
+          "id": "b-mother-relationship",
+          "content": "The user has a close but complicated relationship with their mother.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-father-relationship",
+          "content": "The user has a distant relationship with their father.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-relationship",
+          "content": "The user has a supportive relationship with their younger sister Mia.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-partner-relationship",
+          "content": "The user has lived with their partner Alex for two years.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-friend-relationship",
+          "content": "The user's best friend Jordan has been close since college.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-boss-relationship",
+          "content": "The user has a tense relationship with their manager.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-therapist-fact",
+          "content": "The user sees a therapist every two weeks.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-anxiety-pattern",
+          "content": "The user experiences anxiety before family gatherings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sleep-goal",
+          "content": "The user wants to improve their sleep quality.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-caffeine-fact",
+          "content": "The user drinks about three coffees a day.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-strength-decision",
+          "content": "The user decided to prioritize strength training over cardio.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-honesty-value",
+          "content": "The user values honesty even when it is uncomfortable.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-mother-conflict-pattern",
+          "content": "The user has recurring arguments with their mother about career choices.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-old-partner-relationship",
+          "content": "The user used to date someone named Sam.",
+          "memory_type": "relationship",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "b-running-goal",
+          "content": "The user is training for a 10k race.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-meditation-pattern",
+          "content": "The user meditates most mornings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-distance-fact",
+          "content": "The user used to be distant from their sister.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "b-couples-therapy-decision",
+          "content": "The user decided to start couples therapy with their partner.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-alcohol-goal",
+          "content": "The user is cutting back on drinking alcohol.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-nephew-relationship",
+          "content": "The user is close with their nephew Theo, their sister's son.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "b-partner-relationship",
+        "b-couples-therapy-decision"
+      ],
+      "critical_relevant_ids": [
+        "b-partner-relationship"
+      ],
+      "limit": 6
+    },
+    {
+      "id": "hardneg_bank_b_sleep_001",
+      "description": "A sleep-quality goal should surface over adjacent but distinct habits like caffeine and meditation.",
+      "tags": [
+        "hard_negative",
+        "health",
+        "precision"
+      ],
+      "query": "I haven't been sleeping well the last few weeks.",
+      "candidate_memories": [
+        {
+          "id": "b-mother-relationship",
+          "content": "The user has a close but complicated relationship with their mother.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-father-relationship",
+          "content": "The user has a distant relationship with their father.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-relationship",
+          "content": "The user has a supportive relationship with their younger sister Mia.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-partner-relationship",
+          "content": "The user has lived with their partner Alex for two years.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-friend-relationship",
+          "content": "The user's best friend Jordan has been close since college.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-boss-relationship",
+          "content": "The user has a tense relationship with their manager.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-therapist-fact",
+          "content": "The user sees a therapist every two weeks.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-anxiety-pattern",
+          "content": "The user experiences anxiety before family gatherings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sleep-goal",
+          "content": "The user wants to improve their sleep quality.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-caffeine-fact",
+          "content": "The user drinks about three coffees a day.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-strength-decision",
+          "content": "The user decided to prioritize strength training over cardio.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-honesty-value",
+          "content": "The user values honesty even when it is uncomfortable.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-mother-conflict-pattern",
+          "content": "The user has recurring arguments with their mother about career choices.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-old-partner-relationship",
+          "content": "The user used to date someone named Sam.",
+          "memory_type": "relationship",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "b-running-goal",
+          "content": "The user is training for a 10k race.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-meditation-pattern",
+          "content": "The user meditates most mornings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-distance-fact",
+          "content": "The user used to be distant from their sister.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "b-couples-therapy-decision",
+          "content": "The user decided to start couples therapy with their partner.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-alcohol-goal",
+          "content": "The user is cutting back on drinking alcohol.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-nephew-relationship",
+          "content": "The user is close with their nephew Theo, their sister's son.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "b-sleep-goal"
+      ],
+      "critical_relevant_ids": [
+        "b-sleep-goal"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_b_no_match_001",
+      "description": "A fully unrelated query against a large, topically dense corpus must return no relevant memories rather than a plausible-looking false positive.",
+      "tags": [
+        "no_relevant_memory",
+        "precision",
+        "large_corpus"
+      ],
+      "query": "What's the capital of France?",
+      "candidate_memories": [
+        {
+          "id": "b-mother-relationship",
+          "content": "The user has a close but complicated relationship with their mother.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-father-relationship",
+          "content": "The user has a distant relationship with their father.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-relationship",
+          "content": "The user has a supportive relationship with their younger sister Mia.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-partner-relationship",
+          "content": "The user has lived with their partner Alex for two years.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-friend-relationship",
+          "content": "The user's best friend Jordan has been close since college.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-boss-relationship",
+          "content": "The user has a tense relationship with their manager.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-therapist-fact",
+          "content": "The user sees a therapist every two weeks.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-anxiety-pattern",
+          "content": "The user experiences anxiety before family gatherings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sleep-goal",
+          "content": "The user wants to improve their sleep quality.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-caffeine-fact",
+          "content": "The user drinks about three coffees a day.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-strength-decision",
+          "content": "The user decided to prioritize strength training over cardio.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-honesty-value",
+          "content": "The user values honesty even when it is uncomfortable.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-mother-conflict-pattern",
+          "content": "The user has recurring arguments with their mother about career choices.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-old-partner-relationship",
+          "content": "The user used to date someone named Sam.",
+          "memory_type": "relationship",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "b-running-goal",
+          "content": "The user is training for a 10k race.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-meditation-pattern",
+          "content": "The user meditates most mornings.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-sister-distance-fact",
+          "content": "The user used to be distant from their sister.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "b-couples-therapy-decision",
+          "content": "The user decided to start couples therapy with their partner.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-alcohol-goal",
+          "content": "The user is cutting back on drinking alcohol.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "b-nephew-relationship",
+          "content": "The user is close with their nephew Theo, their sister's son.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [],
+      "critical_relevant_ids": [],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_c_german_001",
+      "description": "A German-language goal (stored in German) must be retrieved from an English query, beating a Spanish-language fact.",
+      "tags": [
+        "hard_negative",
+        "multilingual",
+        "language",
+        "cross_lingual"
+      ],
+      "query": "I want to start learning German.",
+      "candidate_memories": [
+        {
+          "id": "c-house-goal",
+          "content": "The user is saving for a house down payment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-index-fund-decision",
+          "content": "The user decided to invest in index funds instead of individual stocks.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-debt-pattern",
+          "content": "The user pays off their credit card in full every month.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-independence-value",
+          "content": "The user values financial independence over luxury spending.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-side-income-goal",
+          "content": "The user wants to build a side income from freelance design work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-rent-decision",
+          "content": "The user decided to keep renting for now instead of buying a home.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-german-goal",
+          "content": "Der Nutzer moechte Deutsch lernen, um in Berlin zu arbeiten.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-overspend-pattern",
+          "content": "The user tends to overspend when they are stressed.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-retirement-fact",
+          "content": "The user contributes ten percent of their income to a retirement account.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-subscription-decision",
+          "content": "The user canceled several unused subscriptions last month.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-crypto-fact",
+          "content": "The user owns a small amount of Bitcoin as a long-term hold.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-old-house-goal",
+          "content": "The user wanted to buy a house within the year.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "c-emergency-fund-goal",
+          "content": "The user is building a six-month emergency fund.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-impulse-pattern",
+          "content": "The user impulse-buys electronics.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-spanish-fact",
+          "content": "El usuario quiere aprender espanol para su proximo viaje.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-advisor-relationship",
+          "content": "The user works with a financial advisor named Tom.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-car-decision",
+          "content": "The user decided to buy a used car instead of a new one.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-minimalism-value",
+          "content": "The user values owning fewer, higher-quality possessions.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-student-loan-fact",
+          "content": "The user has paid down most of their student loan debt.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-budget-pattern",
+          "content": "The user reviews their budget every Sunday.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "c-german-goal"
+      ],
+      "critical_relevant_ids": [
+        "c-german-goal"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_c_german_002",
+      "description": "Cross-lingual retrieval: a Spanish-language query about moving to Berlin must still retrieve the German-language goal, not the Spanish-language decoy fact.",
+      "tags": [
+        "hard_negative",
+        "multilingual",
+        "cross_lingual",
+        "language"
+      ],
+      "query": "Quiero seguir aprendiendo antes de mudarme a Berlin por trabajo.",
+      "candidate_memories": [
+        {
+          "id": "c-house-goal",
+          "content": "The user is saving for a house down payment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-index-fund-decision",
+          "content": "The user decided to invest in index funds instead of individual stocks.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-debt-pattern",
+          "content": "The user pays off their credit card in full every month.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-independence-value",
+          "content": "The user values financial independence over luxury spending.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-side-income-goal",
+          "content": "The user wants to build a side income from freelance design work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-rent-decision",
+          "content": "The user decided to keep renting for now instead of buying a home.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-german-goal",
+          "content": "Der Nutzer moechte Deutsch lernen, um in Berlin zu arbeiten.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-overspend-pattern",
+          "content": "The user tends to overspend when they are stressed.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-retirement-fact",
+          "content": "The user contributes ten percent of their income to a retirement account.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-subscription-decision",
+          "content": "The user canceled several unused subscriptions last month.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-crypto-fact",
+          "content": "The user owns a small amount of Bitcoin as a long-term hold.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-old-house-goal",
+          "content": "The user wanted to buy a house within the year.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "c-emergency-fund-goal",
+          "content": "The user is building a six-month emergency fund.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-impulse-pattern",
+          "content": "The user impulse-buys electronics.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-spanish-fact",
+          "content": "El usuario quiere aprender espanol para su proximo viaje.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-advisor-relationship",
+          "content": "The user works with a financial advisor named Tom.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-car-decision",
+          "content": "The user decided to buy a used car instead of a new one.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-minimalism-value",
+          "content": "The user values owning fewer, higher-quality possessions.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-student-loan-fact",
+          "content": "The user has paid down most of their student loan debt.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-budget-pattern",
+          "content": "The user reviews their budget every Sunday.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "c-german-goal"
+      ],
+      "critical_relevant_ids": [
+        "c-german-goal"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_c_house_001",
+      "description": "Active house-saving goal and the rent-vs-buy decision must beat an invalidated, lexically near-identical old house goal.",
+      "tags": [
+        "hard_negative",
+        "finance",
+        "invalidated_decoy",
+        "near_duplicate"
+      ],
+      "query": "Should I buy a house this year?",
+      "candidate_memories": [
+        {
+          "id": "c-house-goal",
+          "content": "The user is saving for a house down payment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-index-fund-decision",
+          "content": "The user decided to invest in index funds instead of individual stocks.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-debt-pattern",
+          "content": "The user pays off their credit card in full every month.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-independence-value",
+          "content": "The user values financial independence over luxury spending.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-side-income-goal",
+          "content": "The user wants to build a side income from freelance design work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-rent-decision",
+          "content": "The user decided to keep renting for now instead of buying a home.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-german-goal",
+          "content": "Der Nutzer moechte Deutsch lernen, um in Berlin zu arbeiten.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-overspend-pattern",
+          "content": "The user tends to overspend when they are stressed.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-retirement-fact",
+          "content": "The user contributes ten percent of their income to a retirement account.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-subscription-decision",
+          "content": "The user canceled several unused subscriptions last month.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-crypto-fact",
+          "content": "The user owns a small amount of Bitcoin as a long-term hold.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-old-house-goal",
+          "content": "The user wanted to buy a house within the year.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "c-emergency-fund-goal",
+          "content": "The user is building a six-month emergency fund.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-impulse-pattern",
+          "content": "The user impulse-buys electronics.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-spanish-fact",
+          "content": "El usuario quiere aprender espanol para su proximo viaje.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-advisor-relationship",
+          "content": "The user works with a financial advisor named Tom.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-car-decision",
+          "content": "The user decided to buy a used car instead of a new one.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-minimalism-value",
+          "content": "The user values owning fewer, higher-quality possessions.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-student-loan-fact",
+          "content": "The user has paid down most of their student loan debt.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-budget-pattern",
+          "content": "The user reviews their budget every Sunday.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "c-house-goal",
+        "c-rent-decision"
+      ],
+      "critical_relevant_ids": [
+        "c-house-goal"
+      ],
+      "limit": 6
+    },
+    {
+      "id": "hardneg_bank_c_impulse_001",
+      "description": "Impulse-spending pattern and general overspending pattern must beat the minimalism value and an unrelated car decision.",
+      "tags": [
+        "hard_negative",
+        "finance",
+        "multiple_relevant"
+      ],
+      "query": "I keep buying stuff I don't actually need.",
+      "candidate_memories": [
+        {
+          "id": "c-house-goal",
+          "content": "The user is saving for a house down payment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-index-fund-decision",
+          "content": "The user decided to invest in index funds instead of individual stocks.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-debt-pattern",
+          "content": "The user pays off their credit card in full every month.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-independence-value",
+          "content": "The user values financial independence over luxury spending.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-side-income-goal",
+          "content": "The user wants to build a side income from freelance design work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-rent-decision",
+          "content": "The user decided to keep renting for now instead of buying a home.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-german-goal",
+          "content": "Der Nutzer moechte Deutsch lernen, um in Berlin zu arbeiten.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-overspend-pattern",
+          "content": "The user tends to overspend when they are stressed.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-retirement-fact",
+          "content": "The user contributes ten percent of their income to a retirement account.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-subscription-decision",
+          "content": "The user canceled several unused subscriptions last month.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-crypto-fact",
+          "content": "The user owns a small amount of Bitcoin as a long-term hold.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-old-house-goal",
+          "content": "The user wanted to buy a house within the year.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "c-emergency-fund-goal",
+          "content": "The user is building a six-month emergency fund.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-impulse-pattern",
+          "content": "The user impulse-buys electronics.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-spanish-fact",
+          "content": "El usuario quiere aprender espanol para su proximo viaje.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-advisor-relationship",
+          "content": "The user works with a financial advisor named Tom.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-car-decision",
+          "content": "The user decided to buy a used car instead of a new one.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-minimalism-value",
+          "content": "The user values owning fewer, higher-quality possessions.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-student-loan-fact",
+          "content": "The user has paid down most of their student loan debt.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-budget-pattern",
+          "content": "The user reviews their budget every Sunday.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "c-impulse-pattern",
+        "c-overspend-pattern"
+      ],
+      "critical_relevant_ids": [
+        "c-impulse-pattern"
+      ],
+      "limit": 6
+    },
+    {
+      "id": "hardneg_bank_c_emergency_001",
+      "description": "The emergency fund goal must beat the topically adjacent house-saving goal and retirement fact.",
+      "tags": [
+        "hard_negative",
+        "finance",
+        "precision"
+      ],
+      "query": "How is my emergency fund coming along?",
+      "candidate_memories": [
+        {
+          "id": "c-house-goal",
+          "content": "The user is saving for a house down payment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-index-fund-decision",
+          "content": "The user decided to invest in index funds instead of individual stocks.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-debt-pattern",
+          "content": "The user pays off their credit card in full every month.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-independence-value",
+          "content": "The user values financial independence over luxury spending.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-side-income-goal",
+          "content": "The user wants to build a side income from freelance design work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-rent-decision",
+          "content": "The user decided to keep renting for now instead of buying a home.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-german-goal",
+          "content": "Der Nutzer moechte Deutsch lernen, um in Berlin zu arbeiten.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-overspend-pattern",
+          "content": "The user tends to overspend when they are stressed.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-retirement-fact",
+          "content": "The user contributes ten percent of their income to a retirement account.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-subscription-decision",
+          "content": "The user canceled several unused subscriptions last month.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-crypto-fact",
+          "content": "The user owns a small amount of Bitcoin as a long-term hold.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-old-house-goal",
+          "content": "The user wanted to buy a house within the year.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "c-emergency-fund-goal",
+          "content": "The user is building a six-month emergency fund.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-impulse-pattern",
+          "content": "The user impulse-buys electronics.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-spanish-fact",
+          "content": "El usuario quiere aprender espanol para su proximo viaje.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-advisor-relationship",
+          "content": "The user works with a financial advisor named Tom.",
+          "memory_type": "relationship",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-car-decision",
+          "content": "The user decided to buy a used car instead of a new one.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-minimalism-value",
+          "content": "The user values owning fewer, higher-quality possessions.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-student-loan-fact",
+          "content": "The user has paid down most of their student loan debt.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "c-budget-pattern",
+          "content": "The user reviews their budget every Sunday.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "c-emergency-fund-goal"
+      ],
+      "critical_relevant_ids": [
+        "c-emergency-fund-goal"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_d_french_001",
+      "description": "Eighteen same-type goal memories, several about languages or trips: only the France-specific French goal should surface.",
+      "tags": [
+        "hard_negative",
+        "same_type_distractors",
+        "goal",
+        "language",
+        "near_duplicate",
+        "invalidated_decoy"
+      ],
+      "query": "I'm excited about my trip to Paris, I should really practice before I go.",
+      "candidate_memories": [
+        {
+          "id": "d-goal-marathon",
+          "content": "The user is training for a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-japanese",
+          "content": "The user is learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-piano",
+          "content": "The user is learning piano.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-cooking",
+          "content": "The user is learning to cook Thai food.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-writing",
+          "content": "The user is writing a novel.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-meditation",
+          "content": "The user is building a daily meditation habit.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-networking",
+          "content": "The user wants to expand their professional network.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-declutter",
+          "content": "The user wants to declutter their apartment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-french",
+          "content": "The user is learning French for an upcoming trip to Paris.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-photography",
+          "content": "The user is learning photography.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-savings",
+          "content": "The user is saving money for a trip.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-sleep",
+          "content": "The user wants to improve their sleep schedule.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-reading",
+          "content": "The user wants to read more books this year.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-swim",
+          "content": "The user is learning to swim.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-guitar",
+          "content": "The user is learning guitar.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-italian",
+          "content": "The user wanted to learn Italian.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "d-goal-german2",
+          "content": "The user is learning German for work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-yoga",
+          "content": "The user is starting a yoga practice.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "d-goal-french"
+      ],
+      "critical_relevant_ids": [
+        "d-goal-french"
+      ],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_d_no_match_001",
+      "description": "An unrelated cooking question must not force a match even inside a large, homogeneous goal corpus.",
+      "tags": [
+        "no_relevant_memory",
+        "precision",
+        "same_type_distractors",
+        "large_corpus"
+      ],
+      "query": "What's a good recipe for pancakes?",
+      "candidate_memories": [
+        {
+          "id": "d-goal-marathon",
+          "content": "The user is training for a marathon.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-japanese",
+          "content": "The user is learning Japanese.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-piano",
+          "content": "The user is learning piano.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-cooking",
+          "content": "The user is learning to cook Thai food.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-writing",
+          "content": "The user is writing a novel.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-meditation",
+          "content": "The user is building a daily meditation habit.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-networking",
+          "content": "The user wants to expand their professional network.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-declutter",
+          "content": "The user wants to declutter their apartment.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-french",
+          "content": "The user is learning French for an upcoming trip to Paris.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-photography",
+          "content": "The user is learning photography.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-savings",
+          "content": "The user is saving money for a trip.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-sleep",
+          "content": "The user wants to improve their sleep schedule.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-reading",
+          "content": "The user wants to read more books this year.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-swim",
+          "content": "The user is learning to swim.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-guitar",
+          "content": "The user is learning guitar.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-italian",
+          "content": "The user wanted to learn Italian.",
+          "memory_type": "goal",
+          "confidence": 0.94,
+          "status": "invalidated"
+        },
+        {
+          "id": "d-goal-german2",
+          "content": "The user is learning German for work.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "d-goal-yoga",
+          "content": "The user is starting a yoga practice.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [],
+      "critical_relevant_ids": [],
+      "limit": 5
+    },
+    {
+      "id": "hardneg_bank_e_allergy_001",
+      "description": "A genuine allergy and a genuine intolerance must both surface for a safety-relevant query; taste preferences and a relative's condition must not.",
+      "tags": [
+        "hard_negative",
+        "safety",
+        "critical",
+        "precision",
+        "food"
+      ],
+      "query": "What foods should I avoid? I don't want to get sick.",
+      "candidate_memories": [
+        {
+          "id": "e-peanut-allergy",
+          "content": "The user has a peanut allergy.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-gluten-pref",
+          "content": "The user prefers gluten-free food but is not diagnosed with an intolerance.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-cilantro-pref",
+          "content": "The user dislikes the taste of cilantro.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-vegetarian-pref",
+          "content": "The user follows a vegetarian diet.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-lactose-fact",
+          "content": "The user is lactose intolerant.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-spicy-pref",
+          "content": "The user loves spicy food.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-keto-pattern",
+          "content": "The user tried a keto diet briefly and gave up.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-birthday-fact",
+          "content": "The user's birthday is in March.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-cooking-goal",
+          "content": "The user wants to cook more meals at home.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-restaurant-decision",
+          "content": "The user decided to try more local restaurants.",
+          "memory_type": "decision",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-food-budget-value",
+          "content": "The user values eating healthy food over eating cheaply.",
+          "memory_type": "value",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-nut-butter-pref",
+          "content": "The user used to enjoy peanut butter.",
+          "memory_type": "preference",
+          "confidence": 0.94,
+          "status": "deleted"
+        },
+        {
+          "id": "e-sushi-pref",
+          "content": "The user loves sushi.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-alcohol-fact",
+          "content": "The user does not drink alcohol.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        },
+        {
+          "id": "e-celiac-family-fact",
+          "content": "The user's sibling has celiac disease.",
+          "memory_type": "personal_fact",
+          "confidence": 0.94
+        }
+      ],
+      "expected_relevant_ids": [
+        "e-peanut-allergy",
+        "e-lactose-fact"
+      ],
+      "critical_relevant_ids": [
+        "e-peanut-allergy"
+      ],
+      "limit": 5
+    }
+  ]
+}

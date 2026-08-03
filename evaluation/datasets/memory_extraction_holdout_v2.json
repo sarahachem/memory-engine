@@ -1,0 +1,300 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryFactExtractor",
+  "description": "Second unseen holdout for semantic memory-fact extraction after retiring holdout V1. Do not use these cases for prompt tuning.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "schema_valid_response_rate",
+      "fact_precision",
+      "fact_recall",
+      "fact_f1",
+      "compound_fact_recall",
+      "content_faithfulness_rate",
+      "kind_accuracy",
+      "memory_type_accuracy",
+      "evidence_selection_accuracy",
+      "evidence_grounding_rate",
+      "raw_false_memory_rate",
+      "false_memory_rate",
+      "duplicate_fact_rate",
+      "low_confidence_fact_rate"
+    ],
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "fact_precision": {"minimum": 0.9},
+      "fact_recall": {"minimum": 0.9},
+      "compound_fact_recall": {"minimum": 0.9},
+      "evidence_grounding_rate": {"minimum": 1.0},
+      "false_memory_rate": {"maximum": 0.0},
+      "duplicate_fact_rate": {"maximum": 0.0}
+    }
+  },
+  "cases": [
+    {
+      "id": "extract_holdout_v2_isolated_session_001",
+      "description": "One cancelled study session is not a recurring pattern or durable fact.",
+      "tags": ["negative", "single_event", "recurrence", "false_memory", "critical"],
+      "user_message": "I cancelled one study session last night.",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_v2_explicit_pattern_001",
+      "description": "A behavior explicitly recurring whenever criticism occurs is a pattern.",
+      "tags": ["assertion", "recurring_pattern", "recurrence", "critical"],
+      "user_message": "Whenever I receive criticism, I tend to shut down instead of responding.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "recurring_pattern",
+            "accepted_evidence": ["Whenever I receive criticism, I tend to shut down instead of responding"],
+            "content_assertions": {
+              "must_include": ["criticism", "shut down"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_event_preference_001",
+      "description": "An isolated deadline event is ignored while an independent preference is retained.",
+      "tags": ["compound", "single_event", "preference", "critical"],
+      "user_message": "I missed one deadline yesterday but I prefer having weekly progress reviews.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer having weekly progress reviews"],
+            "content_assertions": {
+              "must_include": ["prefer", "weekly", "progress reviews"],
+              "must_not_include": ["deadline", "yesterday"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_unpunctuated_change_001",
+      "description": "Unpunctuated goal invalidation and preference remain atomic.",
+      "tags": ["compound", "no_punctuation", "invalidation", "preference"],
+      "user_message": "I abandoned my plan to study architecture and I prefer learning by building things",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "goal",
+            "accepted_evidence": ["I abandoned my plan to study architecture"],
+            "content_assertions": {
+              "must_include": ["architecture"],
+              "must_include_any": [
+                ["no longer", "study"],
+                ["abandoned", "plan"]
+              ],
+              "must_not_include": ["building things"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer learning by building things"],
+            "content_assertions": {
+              "must_include": ["prefer", "learning", "building things"],
+              "must_not_include": ["architecture"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_request_fact_001",
+      "description": "A request does not suppress its separate durable occupational fact.",
+      "tags": ["compound", "request", "personal_fact"],
+      "user_message": "Can you help me organize this decision? I work as a product manager.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I work as a product manager"],
+            "content_assertions": {
+              "must_include": ["work", "product manager"],
+              "must_not_include": ["organize", "decision"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_tentative_goal_001",
+      "description": "A tentative possibility is ignored while an explicit goal is retained.",
+      "tags": ["compound", "tentative", "goal"],
+      "user_message": "Perhaps I will try sailing someday, but I want to become fluent in German.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "goal",
+            "accepted_evidence": ["I want to become fluent in German"],
+            "content_assertions": {
+              "must_include": ["fluent", "German"],
+              "must_not_include": ["sailing"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_decision_invalidation_001",
+      "description": "An explicitly reversed decision is extracted as an invalidation.",
+      "tags": ["invalidation", "decision"],
+      "user_message": "I have reversed my decision to sell the apartment.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "decision",
+            "accepted_evidence": ["I have reversed my decision to sell the apartment"],
+            "content_assertions": {
+              "must_include": ["sell", "apartment"],
+              "must_include_any": [
+                ["reversed"],
+                ["no longer"]
+              ],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_location_replacement_001",
+      "description": "A changed location yields one invalidation and one current assertion.",
+      "tags": ["compound", "invalidation", "assertion", "replacement"],
+      "user_message": "I do not live in Prague anymore; I live in Vienna now.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "invalidation",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I do not live in Prague anymore"],
+            "content_assertions": {
+              "must_include": ["Prague"],
+              "must_include_any": [
+                ["no longer", "live"],
+                ["do not", "live", "anymore"]
+              ],
+              "must_not_include": ["Vienna"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Vienna now"],
+            "content_assertions": {
+              "must_include": ["live", "Vienna"],
+              "must_not_include": ["Prague"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_relationship_value_001",
+      "description": "A relationship fact and independent value are extracted separately.",
+      "tags": ["compound", "relationship", "value"],
+      "user_message": "Omar is my cofounder, and protecting our friendship matters more to me than winning arguments.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "relationship",
+            "accepted_evidence": ["Omar is my cofounder"],
+            "content_assertions": {
+              "must_include": ["Omar", "cofounder"],
+              "must_not_include": ["arguments"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": ["protecting our friendship matters more to me than winning arguments"],
+            "content_assertions": {
+              "must_include": ["friendship", "winning arguments"],
+              "must_include_any": [
+                ["matters", "more"],
+                ["values", "more"],
+                ["prioritizes"]
+              ],
+              "must_not_include": ["cofounder"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_generic_question_001",
+      "description": "A generic explanatory question contains no durable personal fact.",
+      "tags": ["negative", "request", "false_memory"],
+      "user_message": "Why do people find it difficult to change habits?",
+      "expected": {"facts": []}
+    },
+    {
+      "id": "extract_holdout_v2_three_facts_001",
+      "description": "Three unrelated durable facts are recovered from one message.",
+      "tags": ["compound", "assertion", "multi_fact"],
+      "user_message": "I live in Brussels, I value creative freedom, and I have decided to start my own company.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "personal_fact",
+            "accepted_evidence": ["I live in Brussels"],
+            "content_assertions": {
+              "must_include": ["live", "Brussels"],
+              "must_not_include": ["creative freedom", "company"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "value",
+            "accepted_evidence": ["I value creative freedom"],
+            "content_assertions": {
+              "must_include": ["value", "creative freedom"],
+              "must_not_include": ["Brussels", "company"]
+            }
+          },
+          {
+            "kind": "assertion",
+            "memory_type": "decision",
+            "accepted_evidence": ["I have decided to start my own company"],
+            "content_assertions": {
+              "must_include": ["decide", "start", "own company"],
+              "must_not_include": ["Brussels", "creative freedom"]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "extract_holdout_v2_duplicate_statement_001",
+      "description": "Equivalent repeated clauses collapse into one fact.",
+      "tags": ["assertion", "duplicate_safety"],
+      "user_message": "I prefer direct communication; direct communication is what I prefer.",
+      "expected": {
+        "facts": [
+          {
+            "kind": "assertion",
+            "memory_type": "preference",
+            "accepted_evidence": ["I prefer direct communication", "direct communication is what I prefer"],
+            "content_assertions": {
+              "must_include": ["prefer", "direct communication"],
+              "must_not_include": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

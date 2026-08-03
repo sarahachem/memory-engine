@@ -1,0 +1,400 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryReconciler.reconcile_many",
+  "input_boundary": "Extracted atomic facts and oracle candidate memories are supplied directly. Extraction and retrieval are not evaluated here.",
+  "description": "Development cases for batched, fact-scoped memory reconciliation. This dataset may guide prompt and model changes and is not an untouched holdout.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "batch_complete_rate": {"minimum": 1.0},
+      "operation_accuracy": {"minimum": 0.95},
+      "target_index_accuracy": {"minimum": 0.95},
+      "update_content_faithfulness_rate": {"minimum": 0.9},
+      "fact_isolation_rate": {"minimum": 0.95},
+      "false_create_rate": {"maximum": 0.0},
+      "false_destructive_mutation_rate": {"maximum": 0.0},
+      "duplicate_create_case_rate": {"maximum": 0.0},
+      "batch_constraint_accuracy": {"minimum": 1.0}
+    },
+    "notes": [
+      "Every expected decision is aligned to its fact_index.",
+      "Target correctness is scored using stable candidate IDs, not indices across facts.",
+      "Generated UPDATE wording is checked with deterministic content assertions rather than exact text.",
+      "Confidence and explanations are not compared exactly."
+    ]
+  },
+  "cases": [
+    {
+      "id": "batch_independent_creates_001",
+      "description": "Two unrelated durable facts must both be created without being merged.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user prefers direct feedback.", "memory_type": "preference", "evidence": "I prefer direct feedback", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to learn Japanese.", "memory_type": "goal", "evidence": "I want to learn Japanese", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_invalidate_and_create_001",
+      "description": "Ending one goal must not suppress creation of an unrelated preference.",
+      "facts": [
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer wants to open a bakery.", "memory_type": "goal", "evidence": "I gave up opening a bakery", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "bakery-goal", "content": "The user wants to open a bakery.", "memory_type": "goal", "confidence": 0.96},
+            {"id": "feedback-pattern", "content": "The user avoids asking for feedback.", "memory_type": "recurring_pattern", "confidence": 0.91}
+          ],
+          "expected": {"action": "invalidate", "target_memory_ids": ["bakery-goal"]}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user prefers receiving feedback face to face.", "memory_type": "preference", "evidence": "I prefer feedback face to face", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_update_and_create_001",
+      "description": "A location replacement and a new goal require independent actions.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user now lives in Berlin.", "memory_type": "personal_fact", "evidence": "I now live in Berlin", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "home-location", "content": "The user lives in Munich.", "memory_type": "personal_fact", "confidence": 0.96},
+            {"id": "travel-preference", "content": "The user enjoys visiting large cities.", "memory_type": "preference", "confidence": 0.89}
+          ],
+          "expected": {
+            "action": "update",
+            "target_memory_ids": ["home-location"],
+            "content_assertions": {"must_include": ["Berlin"], "must_not_include": ["lives in Munich"]}
+          }
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to run a half marathon.", "memory_type": "goal", "evidence": "I want to run a half marathon", "confidence": 0.97},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_existing_noop_and_create_001",
+      "description": "An already represented fact is NOOP while a distinct fact is created.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user values autonomy at work.", "memory_type": "value", "evidence": "Autonomy at work matters deeply to me", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "autonomy-value", "content": "The user values autonomy in their career.", "memory_type": "value", "confidence": 0.95}
+          ],
+          "expected": {"action": "noop"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user decided to accept the product lead role.", "memory_type": "decision", "evidence": "I accepted the product lead role", "confidence": 0.97},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_same_type_wrong_target_invalidation_001",
+      "description": "An abandoned goal must invalidate the matching goal, not a same-type distractor.",
+      "facts": [
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer plans to learn piano.", "memory_type": "goal", "evidence": "Piano is no longer a goal", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "public-speaking-goal", "content": "The user wants to become confident speaking in public.", "memory_type": "goal", "confidence": 0.95},
+            {"id": "piano-goal", "content": "The user wants to learn piano.", "memory_type": "goal", "confidence": 0.94}
+          ],
+          "expected": {"action": "invalidate", "target_memory_ids": ["piano-goal"]}
+        }
+      ]
+    },
+    {
+      "id": "batch_unrelated_invalidation_trap_001",
+      "description": "An unmatched invalidation is NOOP and must not interfere with another creation.",
+      "facts": [
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer wants to learn piano.", "memory_type": "goal", "evidence": "I stopped wanting to learn piano", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "feedback-pattern", "content": "The user tends to avoid asking for feedback.", "memory_type": "recurring_pattern", "confidence": 0.93}
+          ],
+          "expected": {"action": "noop"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to improve their sleep routine.", "memory_type": "goal", "evidence": "I want to improve my sleep routine", "confidence": 0.97},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_duplicate_paraphrase_create_001",
+      "description": "Paraphrased duplicate extracted facts may produce only one CREATE.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to learn Japanese.", "memory_type": "goal", "evidence": "I want to learn Japanese", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "create", "accepted_actions": ["create", "noop"]}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "Learning Japanese is a goal for the user.", "memory_type": "goal", "evidence": "learning Japanese is my goal", "confidence": 0.97},
+          "candidate_memories": [],
+          "expected": {"action": "noop", "accepted_actions": ["create", "noop"]}
+        }
+      ],
+      "batch_constraints": {
+        "create_counts": [
+          {"fact_indices": [0, 1], "minimum": 1, "maximum": 1}
+        ]
+      }
+    },
+    {
+      "id": "batch_two_updates_local_indices_001",
+      "description": "Local candidate indices must not leak between two independent updates.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user now prefers a quick call for work feedback.", "memory_type": "preference", "evidence": "I now prefer a quick call for work feedback", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "work-feedback", "content": "The user prefers written work feedback.", "memory_type": "preference", "confidence": 0.95},
+            {"id": "meal-preference", "content": "The user prefers vegetarian meals.", "memory_type": "preference", "confidence": 0.93}
+          ],
+          "expected": {
+            "action": "update",
+            "target_memory_ids": ["work-feedback"],
+            "content_assertions": {"must_include": ["work feedback", "call"], "must_not_include": ["written work feedback"]}
+          }
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user now prefers vegan meals.", "memory_type": "preference", "evidence": "I now prefer vegan meals", "confidence": 0.97},
+          "candidate_memories": [
+            {"id": "meeting-preference", "content": "The user prefers morning meetings.", "memory_type": "preference", "confidence": 0.91},
+            {"id": "meal-preference", "content": "The user prefers vegetarian meals.", "memory_type": "preference", "confidence": 0.93}
+          ],
+          "expected": {
+            "action": "update",
+            "target_memory_ids": ["meal-preference"],
+            "content_assertions": {"must_include": ["vegan meals"], "must_not_include": ["vegetarian meals"]}
+          }
+        }
+      ]
+    },
+    {
+      "id": "batch_same_target_atomicity_001",
+      "description": "Two overlapping facts must not independently rewrite the same snapshot target.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user prefers remote work.", "memory_type": "preference", "evidence": "I prefer remote work", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "work-location-preference", "content": "The user prefers office work.", "memory_type": "preference", "confidence": 0.95}
+          ],
+          "expected": {
+            "action": "update",
+            "accepted_actions": ["update", "noop"],
+            "target_memory_ids": ["work-location-preference"],
+            "content_assertions": {"must_include": ["remote work"], "must_not_include": ["office work"]}
+          }
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user prefers working from home.", "memory_type": "preference", "evidence": "working from home is what I prefer", "confidence": 0.96},
+          "candidate_memories": [
+            {"id": "work-location-preference", "content": "The user prefers office work.", "memory_type": "preference", "confidence": 0.95}
+          ],
+          "expected": {
+            "action": "noop",
+            "accepted_actions": ["update", "noop"],
+            "target_memory_ids": ["work-location-preference"],
+            "content_assertions": {"must_include": ["working from home"], "must_not_include": ["office work"]}
+          }
+        }
+      ],
+      "batch_constraints": {
+        "mutation_counts": [
+          {
+            "fact_indices": [0, 1],
+            "actions": ["update"],
+            "target_memory_ids": ["work-location-preference"],
+            "minimum": 1,
+            "maximum": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "batch_atomic_relationship_creates_001",
+      "description": "Separate sibling and coworker relationships must remain separate creations.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "Nadia is the user's sister.", "memory_type": "relationship", "evidence": "Nadia is my sister", "confidence": 0.99},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user works with Nadia.", "memory_type": "relationship", "evidence": "Nadia and I work together", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        }
+      ],
+      "batch_constraints": {
+        "create_counts": [
+          {"fact_indices": [0, 1], "minimum": 2, "maximum": 2}
+        ]
+      }
+    },
+    {
+      "id": "batch_topical_similarity_noops_001",
+      "description": "Topical similarity alone must not mutate or create duplicates.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to learn Japanese.", "memory_type": "goal", "evidence": "I want to learn Japanese", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "spanish-goal", "content": "The user wants to improve their Spanish.", "memory_type": "goal", "confidence": 0.94}
+          ],
+          "expected": {"action": "create"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user values honest communication.", "memory_type": "value", "evidence": "I value honest communication", "confidence": 0.97},
+          "candidate_memories": [
+            {"id": "feedback-preference", "content": "The user prefers direct feedback.", "memory_type": "preference", "confidence": 0.92}
+          ],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_update_content_faithfulness_001",
+      "description": "Replacement content must preserve scope and remove the contradicted value.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user now wants to speak confidently specifically in work meetings.", "memory_type": "goal", "evidence": "I now want to speak confidently in work meetings", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "public-speaking-goal", "content": "The user wants to become comfortable speaking in public.", "memory_type": "goal", "confidence": 0.95}
+          ],
+          "expected": {
+            "action": "update",
+            "target_memory_ids": ["public-speaking-goal"],
+            "content_assertions": {
+              "must_include": ["work meetings", "confident"],
+              "must_not_include": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "batch_two_invalidations_local_targets_001",
+      "description": "Two invalidations must select their own matching targets among distractors.",
+      "facts": [
+        {
+          "fact": {"kind": "invalidation", "content": "The user is no longer vegetarian.", "memory_type": "preference", "evidence": "I am no longer vegetarian", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "morning-work", "content": "The user prefers working in the morning.", "memory_type": "preference", "confidence": 0.92},
+            {"id": "vegetarian", "content": "The user follows a vegetarian diet.", "memory_type": "preference", "confidence": 0.96}
+          ],
+          "expected": {"action": "invalidate", "target_memory_ids": ["vegetarian"]}
+        },
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer plans to move to Paris.", "memory_type": "goal", "evidence": "I no longer plan to move to Paris", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "paris-goal", "content": "The user plans to move to Paris.", "memory_type": "goal", "confidence": 0.95},
+            {"id": "japanese-goal", "content": "The user wants to learn Japanese.", "memory_type": "goal", "confidence": 0.93}
+          ],
+          "expected": {"action": "invalidate", "target_memory_ids": ["paris-goal"]}
+        }
+      ]
+    },
+    {
+      "id": "batch_all_operations_001",
+      "description": "One compound batch contains CREATE, UPDATE, INVALIDATE, and NOOP without cross-fact leakage.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user wants to start strength training.", "memory_type": "goal", "evidence": "I want to start strength training", "confidence": 0.97},
+          "candidate_memories": [],
+          "expected": {"action": "create"}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user now lives in Lisbon.", "memory_type": "personal_fact", "evidence": "I now live in Lisbon", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "location", "content": "The user lives in Porto.", "memory_type": "personal_fact", "confidence": 0.96}
+          ],
+          "expected": {
+            "action": "update",
+            "target_memory_ids": ["location"],
+            "content_assertions": {"must_include": ["Lisbon"], "must_not_include": ["Porto"]}
+          }
+        },
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer wants to write a novel.", "memory_type": "goal", "evidence": "I no longer want to write a novel", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "novel-goal", "content": "The user wants to write a novel.", "memory_type": "goal", "confidence": 0.95}
+          ],
+          "expected": {"action": "invalidate", "target_memory_ids": ["novel-goal"]}
+        },
+        {
+          "fact": {"kind": "assertion", "content": "The user prefers concise answers.", "memory_type": "preference", "evidence": "I still prefer concise answers", "confidence": 0.97},
+          "candidate_memories": [
+            {"id": "concise-preference", "content": "The user prefers concise answers.", "memory_type": "preference", "confidence": 0.95}
+          ],
+          "expected": {"action": "noop"}
+        }
+      ]
+    },
+    {
+      "id": "batch_invalidation_without_candidate_001",
+      "description": "An invalidation with no matching candidate must be NOOP, never CREATE.",
+      "facts": [
+        {
+          "fact": {"kind": "invalidation", "content": "The user no longer wants to become a pilot.", "memory_type": "goal", "evidence": "I no longer want to become a pilot", "confidence": 0.98},
+          "candidate_memories": [],
+          "expected": {"action": "noop"}
+        }
+      ]
+    }
+    ,
+    {
+      "id": "batch_same_proposition_taxonomy_noop_001",
+      "description": "Commitment wording and adjacent taxonomy do not justify rewriting the same active proposition.",
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user has decided to save for a home deposit.", "memory_type": "decision", "evidence": "I decided to start saving for a home deposit", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "deposit-goal", "content": "The user wants to save money for a home deposit.", "memory_type": "goal", "confidence": 0.95}
+          ],
+          "expected": {"action": "noop"}
+        }
+      ]
+    },
+    {
+      "id": "batch_distinct_value_candidate_create_001",
+      "description": "A new value must be created when the supplied candidate is only topically related.",
+      "tags": ["consumed_holdout_v3", "create", "distinct_proposition"],
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "The user values making information accessible to everyone.", "memory_type": "value", "evidence": "Making information accessible to everyone matters to me", "confidence": 0.98},
+          "candidate_memories": [
+            {"id": "plain-language", "content": "The user prefers concise written explanations.", "memory_type": "preference", "confidence": 0.92}
+          ],
+          "expected": {"action": "create"}
+        }
+      ]
+    },
+    {
+      "id": "batch_same_person_distinct_relationship_create_001",
+      "description": "A new family relationship must be created when an unrelated relationship with the same person exists.",
+      "tags": ["consumed_holdout_v3", "create", "relationship", "distinct_proposition"],
+      "facts": [
+        {
+          "fact": {"kind": "assertion", "content": "Priya is the user's sister-in-law.", "memory_type": "relationship", "evidence": "Priya is my sister-in-law", "confidence": 0.99},
+          "candidate_memories": [
+            {"id": "priya-volunteer", "content": "The user volunteers with Priya.", "memory_type": "relationship", "confidence": 0.95}
+          ],
+          "expected": {"action": "create"}
+        }
+      ]
+    }
+  ]
+}

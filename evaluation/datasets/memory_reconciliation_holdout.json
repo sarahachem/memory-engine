@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "LLMMemoryReconciler.reconcile_many",
+  "input_boundary": "Extracted atomic facts and oracle candidate memories are supplied directly. Extraction and retrieval are not evaluated here.",
+  "description": "Untouched batched reconciliation holdout for the frozen hosted memory configuration. Run once and never tune against these cases.",
+  "evaluation_contract": {
+    "acceptance_gates": {
+      "schema_valid_response_rate": {"minimum": 1.0},
+      "batch_complete_rate": {"minimum": 1.0},
+      "operation_accuracy": {"minimum": 0.95},
+      "target_index_accuracy": {"minimum": 0.95},
+      "update_content_faithfulness_rate": {"minimum": 0.9},
+      "fact_isolation_rate": {"minimum": 0.95},
+      "false_create_rate": {"maximum": 0.0},
+      "false_destructive_mutation_rate": {"maximum": 0.0},
+      "duplicate_create_case_rate": {"maximum": 0.0},
+      "batch_constraint_accuracy": {"minimum": 1.0}
+    },
+    "notes": [
+      "This holdout must not influence prompts or implementation before its single run.",
+      "Targets are scored by stable candidate ID and UPDATE wording by deterministic content assertions."
+    ]
+  },
+  "cases": [
+    {
+      "id": "reconcile_holdout_independent_creates_001",
+      "description": "Three unrelated facts remain independent creations.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user wants to learn pottery.", "memory_type": "goal", "evidence": "I want to learn pottery", "confidence": 0.98}, "candidate_memories": [], "expected": {"action": "create"}},
+        {"fact": {"kind": "assertion", "content": "The user prefers meetings with a written agenda.", "memory_type": "preference", "evidence": "I prefer meetings with a written agenda", "confidence": 0.98}, "candidate_memories": [], "expected": {"action": "create"}},
+        {"fact": {"kind": "assertion", "content": "The user values fairness.", "memory_type": "value", "evidence": "Fairness matters deeply to me", "confidence": 0.97}, "candidate_memories": [], "expected": {"action": "create"}}
+      ],
+      "batch_constraints": {"create_counts": [{"fact_indices": [0, 1, 2], "minimum": 3, "maximum": 3}]}
+    },
+    {
+      "id": "reconcile_holdout_invalidate_create_001",
+      "description": "An exact goal invalidation must not suppress an unrelated preference creation.",
+      "facts": [
+        {"fact": {"kind": "invalidation", "content": "The user no longer wants to volunteer at the animal shelter.", "memory_type": "goal", "evidence": "I no longer plan to volunteer at the animal shelter", "confidence": 0.99}, "candidate_memories": [{"id": "shelter-goal", "content": "The user wants to volunteer at an animal shelter.", "memory_type": "goal", "confidence": 0.96}, {"id": "fundraising-goal", "content": "The user wants to organize a charity fundraiser.", "memory_type": "goal", "confidence": 0.93}], "expected": {"action": "invalidate", "target_memory_ids": ["shelter-goal"]}},
+        {"fact": {"kind": "assertion", "content": "The user prefers a savory breakfast.", "memory_type": "preference", "evidence": "I prefer a savory breakfast", "confidence": 0.97}, "candidate_memories": [], "expected": {"action": "create"}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_two_local_updates_001",
+      "description": "Two replacements resolve against different local candidate lists.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user now lives in Lisbon.", "memory_type": "personal_fact", "evidence": "I moved from Porto to Lisbon", "confidence": 0.99}, "candidate_memories": [{"id": "employer", "content": "The user works for Cedar Systems.", "memory_type": "personal_fact", "confidence": 0.92}, {"id": "home-city", "content": "The user lives in Porto.", "memory_type": "personal_fact", "confidence": 0.96}], "expected": {"action": "update", "target_memory_ids": ["home-city"], "content_assertions": {"must_include": ["Lisbon"], "must_not_include": ["Porto"]}}},
+        {"fact": {"kind": "assertion", "content": "The user now prefers afternoon meetings.", "memory_type": "preference", "evidence": "I now prefer afternoon meetings instead of morning ones", "confidence": 0.98}, "candidate_memories": [{"id": "meeting-time", "content": "The user prefers morning meetings.", "memory_type": "preference", "confidence": 0.95}, {"id": "meeting-format", "content": "The user prefers meetings with an agenda.", "memory_type": "preference", "confidence": 0.93}], "expected": {"action": "update", "target_memory_ids": ["meeting-time"], "content_assertions": {"must_include": ["afternoon meetings"], "must_not_include": ["morning meetings"]}}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_same_target_atomicity_001",
+      "description": "Overlapping goal refinements may mutate a shared snapshot target only once.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user wants to complete a cycling tour in September.", "memory_type": "goal", "evidence": "I want to complete the cycling tour in September", "confidence": 0.98}, "candidate_memories": [{"id": "cycling-goal", "content": "The user wants to complete a cycling tour.", "memory_type": "goal", "confidence": 0.96}], "expected": {"action": "update", "accepted_actions": ["update", "noop"], "target_memory_ids": ["cycling-goal"], "content_assertions": {"must_include": ["cycling tour", "September"], "must_not_include": []}}},
+        {"fact": {"kind": "assertion", "content": "September is the user's target month for the cycling tour.", "memory_type": "goal", "evidence": "September is my target month for it", "confidence": 0.96}, "candidate_memories": [{"id": "cycling-goal", "content": "The user wants to complete a cycling tour.", "memory_type": "goal", "confidence": 0.96}], "expected": {"action": "noop", "accepted_actions": ["update", "noop"], "target_memory_ids": ["cycling-goal"], "content_assertions": {"must_include": ["cycling tour", "September"], "must_not_include": []}}}
+      ],
+      "batch_constraints": {"mutation_counts": [{"fact_indices": [0, 1], "actions": ["update"], "target_memory_ids": ["cycling-goal"], "minimum": 1, "maximum": 1}]}
+    },
+    {
+      "id": "reconcile_holdout_duplicate_create_001",
+      "description": "Two renderings of the same new preference create one memory only.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user prefers reading before bed.", "memory_type": "preference", "evidence": "I prefer reading before bed", "confidence": 0.98}, "candidate_memories": [], "expected": {"action": "create", "accepted_actions": ["create", "noop"]}},
+        {"fact": {"kind": "assertion", "content": "Reading at bedtime is the user's preference.", "memory_type": "preference", "evidence": "reading at bedtime is what I like", "confidence": 0.96}, "candidate_memories": [], "expected": {"action": "noop", "accepted_actions": ["create", "noop"]}}
+      ],
+      "batch_constraints": {"create_counts": [{"fact_indices": [0, 1], "minimum": 1, "maximum": 1}]}
+    },
+    {
+      "id": "reconcile_holdout_topical_traps_001",
+      "description": "Topically similar but distinct facts are new creations, not updates.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user wants to learn Italian.", "memory_type": "goal", "evidence": "I want to learn Italian", "confidence": 0.98}, "candidate_memories": [{"id": "french-goal", "content": "The user wants to improve their French.", "memory_type": "goal", "confidence": 0.94}], "expected": {"action": "create"}},
+        {"fact": {"kind": "assertion", "content": "The user values financial independence.", "memory_type": "value", "evidence": "Financial independence matters to me", "confidence": 0.97}, "candidate_memories": [{"id": "budget-preference", "content": "The user prefers using a monthly budget.", "memory_type": "preference", "confidence": 0.91}], "expected": {"action": "create"}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_missing_invalidation_target_001",
+      "description": "An invalidation with no matching candidate is a NOOP.",
+      "facts": [
+        {"fact": {"kind": "invalidation", "content": "The user no longer wants to learn the violin.", "memory_type": "goal", "evidence": "I gave up learning violin", "confidence": 0.98}, "candidate_memories": [{"id": "guitar-goal", "content": "The user wants to learn guitar.", "memory_type": "goal", "confidence": 0.95}, {"id": "music-preference", "content": "The user enjoys classical music.", "memory_type": "preference", "confidence": 0.91}], "expected": {"action": "noop"}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_existing_noops_001",
+      "description": "Already represented paraphrases produce only NOOP decisions.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user values dependable friendships.", "memory_type": "value", "evidence": "Dependability in friendship matters to me", "confidence": 0.97}, "candidate_memories": [{"id": "friendship-value", "content": "The user values reliability in close friendships.", "memory_type": "value", "confidence": 0.95}], "expected": {"action": "noop"}},
+        {"fact": {"kind": "assertion", "content": "The user prefers walking meetings.", "memory_type": "preference", "evidence": "Walking meetings are my preference", "confidence": 0.98}, "candidate_memories": [{"id": "walking-meeting", "content": "The user likes to hold meetings while walking.", "memory_type": "preference", "confidence": 0.94}], "expected": {"action": "noop"}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_all_actions_001",
+      "description": "One batch exercises create, update, invalidate, and noop without interference.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user wants to study astronomy.", "memory_type": "goal", "evidence": "I want to study astronomy", "confidence": 0.98}, "candidate_memories": [], "expected": {"action": "create"}},
+        {"fact": {"kind": "assertion", "content": "The user now works at Northwind Health.", "memory_type": "personal_fact", "evidence": "I now work at Northwind Health instead of Harbor Tech", "confidence": 0.99}, "candidate_memories": [{"id": "employer-old", "content": "The user works at Harbor Tech.", "memory_type": "personal_fact", "confidence": 0.96}], "expected": {"action": "update", "target_memory_ids": ["employer-old"], "content_assertions": {"must_include": ["Northwind Health"], "must_not_include": ["Harbor Tech"]}}},
+        {"fact": {"kind": "invalidation", "content": "The user no longer plans to write a cookbook.", "memory_type": "goal", "evidence": "I abandoned the cookbook plan", "confidence": 0.99}, "candidate_memories": [{"id": "cookbook-goal", "content": "The user wants to write a cookbook.", "memory_type": "goal", "confidence": 0.96}], "expected": {"action": "invalidate", "target_memory_ids": ["cookbook-goal"]}},
+        {"fact": {"kind": "assertion", "content": "The user values curiosity.", "memory_type": "value", "evidence": "Curiosity is still one of my core values", "confidence": 0.97}, "candidate_memories": [{"id": "curiosity-value", "content": "The user values curiosity and lifelong discovery.", "memory_type": "value", "confidence": 0.95}], "expected": {"action": "noop"}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_same_type_delete_target_001",
+      "description": "An explicit guitar-goal invalidation must not target another hobby goal.",
+      "facts": [
+        {"fact": {"kind": "invalidation", "content": "The user no longer wants to learn guitar.", "memory_type": "goal", "evidence": "Learning guitar is no longer my goal", "confidence": 0.99}, "candidate_memories": [{"id": "garden-goal", "content": "The user wants to start a vegetable garden.", "memory_type": "goal", "confidence": 0.95}, {"id": "guitar-goal", "content": "The user wants to learn guitar.", "memory_type": "goal", "confidence": 0.94}], "expected": {"action": "invalidate", "target_memory_ids": ["guitar-goal"]}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_scope_update_001",
+      "description": "A narrowed goal updates the same underlying goal and preserves its scope.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user wants to network specifically at renewable-energy conferences.", "memory_type": "goal", "evidence": "I want to focus my networking on renewable-energy conferences", "confidence": 0.98}, "candidate_memories": [{"id": "networking-goal", "content": "The user wants to expand their professional network.", "memory_type": "goal", "confidence": 0.95}, {"id": "energy-interest", "content": "The user follows renewable-energy news.", "memory_type": "preference", "confidence": 0.89}], "expected": {"action": "update", "target_memory_ids": ["networking-goal"], "content_assertions": {"must_include": ["networking", "renewable-energy conferences"], "must_not_include": []}}}
+      ]
+    },
+    {
+      "id": "reconcile_holdout_adjacent_taxonomy_noop_001",
+      "description": "The same proposition under an adjacent taxonomy is already represented.",
+      "facts": [
+        {"fact": {"kind": "assertion", "content": "The user has decided to save for a home deposit.", "memory_type": "decision", "evidence": "I decided to start saving for a home deposit", "confidence": 0.98}, "candidate_memories": [{"id": "deposit-goal", "content": "The user wants to save money for a home deposit.", "memory_type": "goal", "confidence": 0.95}], "expected": {"action": "noop"}}
+      ]
+    }
+  ]
+}

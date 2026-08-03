@@ -1,0 +1,391 @@
+{
+  "schema_version": "1.0",
+  "evaluation_target": "MemoryManagerPipeline",
+  "input_boundary": "Initial memories are supplied directly and retrieval must return them in dataset order. This dataset evaluates planner, mutation validator, manager execution, and final memory state; it does not evaluate retrieval quality.",
+  "description": "End-to-end memory pipeline cases scored against final active and deleted memory state rather than raw planner operations.",
+  "evaluation_contract": {
+    "required_metrics": [
+      "case_pass_rate",
+      "final_state_accuracy",
+      "expected_change_applied_rate",
+      "memory_type_accuracy",
+      "unsafe_final_mutation_rate",
+      "incorrect_deletion_rate",
+      "incorrect_update_rate",
+      "unexpected_creation_rate",
+      "duplicate_active_memory_rate",
+      "unnecessary_update_rate"
+    ],
+    "operation_order_matters": false,
+    "generated_memory_ids_are_not_compared": true,
+    "scoring_notes": {
+      "accepted_memory_types": "Any listed type is taxonomy-correct for that expected memory.",
+      "must_include_any": "At least one listed group of required concepts must match.",
+      "type_only_mismatch_is_unsafe": false,
+      "unnecessary_update": "A preserved memory was rewritten even though its initial state already satisfied the expected final meaning. This is tracked as churn, not as an unsafe mutation."
+    }
+  },
+  "cases": [
+    {
+      "id": "pipeline_block_unrelated_delete_create_goal_001",
+      "description": "An unrelated destructive proposal must be blocked while an independent new goal is still created.",
+      "tags": [
+        "delete",
+        "create",
+        "unsafe_delete",
+        "independent_operation"
+      ],
+      "user_message": "Public speaking is no longer my goal, but I want to become a better leader.",
+      "initial_memories": [
+        {
+          "id": "pattern-1",
+          "content": "The user tends to avoid difficult conversations because they worry about upsetting people.",
+          "memory_type": "recurring_pattern",
+          "confidence": 0.94
+        }
+      ],
+      "expected": {
+        "active_memory_count": 2,
+        "active_memories": [
+          {
+            "id": "pattern-1",
+            "memory_type": "recurring_pattern",
+            "content_assertions": {
+              "must_include": [
+                "difficult conversations",
+                "upsetting people"
+              ],
+              "must_not_include": [
+                "public speaking"
+              ]
+            }
+          },
+          {
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": [
+                "better leader"
+              ],
+              "must_not_include": [
+                "public speaking"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": []
+      }
+    },
+    {
+      "id": "pipeline_apply_valid_delete_001",
+      "description": "An explicitly abandoned matching goal is deleted.",
+      "tags": [
+        "delete",
+        "safe"
+      ],
+      "user_message": "Completing a triathlon is no longer one of my goals.",
+      "initial_memories": [
+        {
+          "id": "goal-1",
+          "content": "The user wants to complete a triathlon.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "active_memory_count": 0,
+        "active_memories": [],
+        "deleted_memory_ids": [
+          "goal-1"
+        ]
+      }
+    },
+    {
+      "id": "pipeline_apply_valid_update_001",
+      "description": "A durable replacement updates the existing memory without changing its identity.",
+      "tags": [
+        "update",
+        "safe",
+        "identity_preservation"
+      ],
+      "user_message": "I now live in Copenhagen instead of Hamburg.",
+      "initial_memories": [
+        {
+          "id": "location-1",
+          "content": "The user lives in Hamburg.",
+          "memory_type": "personal_fact",
+          "confidence": 0.96
+        }
+      ],
+      "expected": {
+        "active_memory_count": 1,
+        "active_memories": [
+          {
+            "id": "location-1",
+            "memory_type": "personal_fact",
+            "content_assertions": {
+              "must_include": [
+                "Copenhagen"
+              ],
+              "must_not_include": [
+                "lives in Hamburg"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": []
+      }
+    },
+    {
+      "id": "pipeline_atomic_update_and_create_001",
+      "description": "Two independent durable facts become an atomic update and a separate create.",
+      "tags": [
+        "update",
+        "create",
+        "atomicity",
+        "multi_operation"
+      ],
+      "user_message": "I now prefer remote work, and I have decided to start saving for a house.",
+      "initial_memories": [
+        {
+          "id": "preference-1",
+          "content": "The user prefers working from an office.",
+          "memory_type": "preference",
+          "confidence": 0.94
+        }
+      ],
+      "expected": {
+        "active_memory_count": 2,
+        "active_memories": [
+          {
+            "id": "preference-1",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "remote work"
+              ],
+              "must_not_include": [
+                "saving",
+                "house",
+                "working from an office"
+              ]
+            }
+          },
+          {
+            "memory_type": "goal",
+            "accepted_memory_types": [
+              "goal",
+              "decision"
+            ],
+            "content_assertions": {
+              "must_include": [
+                "saving",
+                "house"
+              ],
+              "must_not_include": [
+                "remote work"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": []
+      }
+    },
+    {
+      "id": "pipeline_block_unrelated_delete_create_preference_001",
+      "description": "An unmatched abandoned goal must not delete an unrelated goal, while a new preference is created.",
+      "tags": [
+        "delete",
+        "create",
+        "unsafe_delete",
+        "wrong_target"
+      ],
+      "user_message": "I have given up on opening a bakery. I prefer receiving feedback face to face.",
+      "initial_memories": [
+        {
+          "id": "goal-1",
+          "content": "The user wants to publish a collection of short stories.",
+          "memory_type": "goal",
+          "confidence": 0.91
+        }
+      ],
+      "expected": {
+        "active_memory_count": 2,
+        "active_memories": [
+          {
+            "id": "goal-1",
+            "memory_type": "goal",
+            "content_assertions": {
+              "must_include": [
+                "short stories"
+              ],
+              "must_not_include": [
+                "bakery"
+              ]
+            }
+          },
+          {
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "feedback"
+              ],
+              "must_include_any": [
+                [
+                  "face to face"
+                ],
+                [
+                  "in person"
+                ]
+              ],
+              "must_not_include": [
+                "bakery",
+                "short stories"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": []
+      }
+    },
+    {
+      "id": "pipeline_delete_and_update_independently_001",
+      "description": "A valid deletion and a valid update target separate memories and both execute.",
+      "tags": [
+        "delete",
+        "update",
+        "atomicity",
+        "multi_operation"
+      ],
+      "user_message": "I have dropped my plan to write a novel. I now prefer studying in the morning instead of at night.",
+      "initial_memories": [
+        {
+          "id": "goal-1",
+          "content": "The user wants to write a novel.",
+          "memory_type": "goal",
+          "confidence": 0.94
+        },
+        {
+          "id": "preference-1",
+          "content": "The user prefers studying at night.",
+          "memory_type": "preference",
+          "confidence": 0.93
+        }
+      ],
+      "expected": {
+        "active_memory_count": 1,
+        "active_memories": [
+          {
+            "id": "preference-1",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "studying",
+                "morning"
+              ],
+              "must_not_include": [
+                "studying at night",
+                "novel"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": [
+          "goal-1"
+        ]
+      }
+    },
+    {
+      "id": "pipeline_skip_duplicate_create_001",
+      "description": "A paraphrased reaffirmation must not leave two active copies of the same preference.",
+      "tags": [
+        "create",
+        "duplicate"
+      ],
+      "user_message": "I prefer scheduling focused work during the morning.",
+      "initial_memories": [
+        {
+          "id": "preference-1",
+          "content": "The user prefers doing focused work in the morning.",
+          "memory_type": "preference",
+          "confidence": 0.93
+        }
+      ],
+      "expected": {
+        "active_memory_count": 1,
+        "active_memories": [
+          {
+            "id": "preference-1",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "focused work",
+                "morning"
+              ],
+              "must_not_include": []
+            }
+          }
+        ],
+        "deleted_memory_ids": []
+      }
+    },
+    {
+      "id": "pipeline_reject_one_apply_another_001",
+      "description": "Rejecting one unsafe update must not prevent a separate valid deletion.",
+      "tags": [
+        "update",
+        "delete",
+        "unsafe_update",
+        "independent_operation"
+      ],
+      "user_message": "I prefer swimming to running, and learning French is no longer my goal.",
+      "initial_memories": [
+        {
+          "id": "preference-1",
+          "content": "The user prefers savory breakfasts.",
+          "memory_type": "preference",
+          "confidence": 0.92
+        },
+        {
+          "id": "goal-1",
+          "content": "The user wants to become fluent in French.",
+          "memory_type": "goal",
+          "confidence": 0.95
+        }
+      ],
+      "expected": {
+        "active_memory_count": 2,
+        "active_memories": [
+          {
+            "id": "preference-1",
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "savory breakfasts"
+              ],
+              "must_not_include": [
+                "swimming",
+                "running"
+              ]
+            }
+          },
+          {
+            "memory_type": "preference",
+            "content_assertions": {
+              "must_include": [
+                "swimming",
+                "running"
+              ],
+              "must_not_include": [
+                "savory breakfasts",
+                "French"
+              ]
+            }
+          }
+        ],
+        "deleted_memory_ids": [
+          "goal-1"
+        ]
+      }
+    }
+  ]
+}
