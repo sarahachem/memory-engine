@@ -13,6 +13,30 @@ Most chatbot "memory" is store-what-was-said-and-repeat-it-back. This module tre
 
 Every memory event is appended, never overwritten — the "active" state is a projection over that log, which is what makes correction and deletion honest rather than silent rewrites.
 
+## Which model is used where
+
+Not every step needs a model, and not every model-using step needs the same model. The rule: **hosted OpenAI models handle every step that requires understanding meaning; a local Ollama model handles embedding; plain code handles everything that's really just math or storage.**
+
+**Write path** — a message that might change what's remembered:
+
+| Step | Uses a model? | Which one |
+|---|---|---|
+| 1. Extract atomic facts from the message | Yes | **OpenAI** (`gpt-5.4-mini`) |
+| 2. Embed the facts to find similar existing memories | Yes | Ollama (local, `embeddinggemma`) |
+| 3. Reconcile: create / update / invalidate / no-op | Yes | **OpenAI** (`gpt-5.6-terra`) |
+| 4. Validate the mutation (only if destructive) | Yes | **OpenAI** (`gpt-5.6-terra`) |
+| 5. Write the event to SQLite | No | — plain code |
+
+**Read path** — retrieving memories to personalize a response:
+
+| Step | Uses a model? | Which one |
+|---|---|---|
+| 1. Embed the query and candidate memories | Yes | Ollama (local, `embeddinggemma`) |
+| 2. Compute cosine similarity, take top-k | No | — plain math |
+| 3. Rerank the top-k for actual relevance | Yes | **OpenAI** (`gpt-5.4-mini`) |
+
+Of 8 total steps across both paths: 4 use OpenAI (the ones needing real language understanding — extraction, reconciliation, validation, reranking), 2 use a free local model (both embedding steps), and 2 use no model at all (similarity math, storage). See [docs/architecture.md](docs/architecture.md) for why each OpenAI-using step earned that model specifically, with the evaluation evidence behind it.
+
 ## Running it
 
 ```bash
