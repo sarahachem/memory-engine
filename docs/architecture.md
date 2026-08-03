@@ -48,11 +48,13 @@ Reranker call
 
 A valid "nothing relevant" and a broken call are handled differently, and both are safe.
 
-## The one deliberate exception to "don't add a second judge model"
+## Why mutation gets a second model pass, and nothing else does
 
-The general rule: don't bolt a second model onto every response just to double-check the first one — it adds latency and cost without an independently observable truth signal. Mutation is the one narrow exception, justified by measured evidence: several models confidently proposed **destructive** memory changes that were wrong — treating "wants to save for a house" and "has decided to save for a house" as the same fact needing an update, when the user's actual commitment level had materially changed and both are worth keeping distinct.
+Every `UPDATE` or `INVALIDATE` is reviewed by a second, adversarial prompt before it's allowed to persist — its only job is to try to falsify the proposed change. This exists because of measured evidence, not caution for its own sake: several models confidently proposed **destructive** memory changes that were wrong — treating "wants to save for a house" and "has decided to save for a house" as the same fact needing an update, when the user's actual commitment level had materially changed and both were worth keeping distinct.
 
-Every `UPDATE` or `INVALIDATE` gets reviewed by an adversarial prompt whose only job is to try to falsify the proposed change before it's allowed to persist. This is not "real" independent verification in a statistical sense — it's often the same underlying model family, so it can share blind spots. Its value comes from a stricter schema, a narrower input, and a different, skeptical role.
+That second pass is not "real" independent verification in a statistical sense — it's often the same underlying model family reviewing itself, so it can share blind spots with the first call. Its value comes from a stricter schema, a narrower input, and a different, skeptical role, not from genuine model diversity.
+
+It's also deliberately the *only* place this happens. The general rule elsewhere is: don't bolt a second model onto a response just to double-check the first one — it adds latency and cost without an independently observable truth signal. Mutation earned the one exception because a wrong mutation is different from a wrong response: a bad answer is forgotten after the turn, but a bad mutation persists as a permanently wrong belief about the user until something else corrects it.
 
 > Use models for semantic interpretation and bounded judgment. Use software for contracts, permissions, safety, provenance, and deterministic execution.
 
