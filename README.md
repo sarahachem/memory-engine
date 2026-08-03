@@ -6,7 +6,7 @@ See [docs/architecture.md](docs/architecture.md) for the full design rationale, 
 
 ## What this is
 
-Most chatbot "memory" is store-what-was-said-and-repeat-it-back. This module treats memory as two separate problems with different failure modes:
+This isn't a novel approach — [Mem0](https://mem0.ai), [Zep/Graphiti](https://blog.getzep.com/graphiti-knowledge-graphs-for-agents/), and [Letta](https://www.letta.com/) all solve pieces of the same problem, some more elaborately (Graphiti's temporal knowledge graph, for one, is more sophisticated than anything here). What this module treats deliberately is memory as two separate problems with different failure modes:
 
 - **Read path** — retrieve relevant memories for a response. Optimizes for *precision*: an irrelevant memory can distort a response even if it's topically similar.
 - **Write path** — decide whether a message should change what's remembered. Optimizes for *safety*: extract atomic facts, reconcile them against existing memory (create/update/invalidate/no-op), and require a second, adversarial model pass before any destructive change is allowed to persist.
