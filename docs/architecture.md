@@ -33,7 +33,7 @@ Write path (memory capture, append-only, fails closed)
 
 Every memory event — created, superseded, invalidated, deleted — is appended, never overwritten. The "active" state a caller sees is a projection over that log, which is what makes correction and deletion honest: nothing is quietly rewritten underneath a user's back.
 
-## The decision that reframed everything else
+## ReRanking
 
 Cosine similarity scores for genuinely relevant and genuinely irrelevant memories **overlap**. There's no single threshold that's simultaneously safe and useful. A memory about a user's Spanish class can outscore a memory that's actually about their Japanese trip, because the embedding model is measuring topical proximity, not truth.
 
@@ -48,7 +48,7 @@ Reranker call
 
 A valid "nothing relevant" and a broken call are handled differently, and both are safe.
 
-## Why mutation gets a second model pass, and nothing else does
+## Mutation gets a second model pass
 
 Every `UPDATE` or `INVALIDATE` is reviewed by a second, adversarial prompt before it's allowed to persist — its only job is to try to falsify the proposed change. This exists because of measured evidence, not caution for its own sake: several models confidently proposed **destructive** memory changes that were wrong — treating "wants to save for a house" and "has decided to save for a house" as the same fact needing an update, when the user's actual commitment level had materially changed and both were worth keeping distinct.
 
